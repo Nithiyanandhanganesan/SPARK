@@ -1,0 +1,42 @@
+Spark Core consists of two APIs. The Unstructured and Structured APIs. 
+The Unstructured API is Spark’s lower level set of APIs including Resilient Distributed Datasets (RDDs), Accumulators, and Broadcast variables. 
+The Structured API consists of DataFrames, Datasets, Spark SQL.
+
+Architecture (Spark + Yarn):
+=============================
+
+Spark Applications consist of a driver process and a set of executor processes.
+
+Driver:
+-------------
+
+Driver is a jvm process runs on the node where we execute the spark code.
+Driver is reponsible for :
+  - maintaining information about the Spark application
+  - scheduling work across the executors.
+
+
+
+Incase of deploy mode is client , then the node in which we submit the spark application act as driver node and request yarn ResourceManager for container.
+Incase of deploy mode is cluster, then driver process and application master will run together in the same container. This means that the same process is 
+responsible for both driving the application and requesting resources from YARN, and this process runs inside a YARN container.
+
+Executor:
+---------------
+An executor is responsible for two things: executing code assigned to it by the driver and reporting the state of the computation back to the driver node.
+
+
+
+Process flow:
+-----------------
+A central master service (the YARN ResourceManager, Mesos master, or Spark standalone master) decides which applications get to run executor processes, 
+as well as where and when they get to run. 
+A slave service running on every node (the YARN NodeManager, Mesos slave, or Spark standalone slave) actually starts the executor processes.
+When running Spark on YARN, each Spark executor runs as a YARN container. 
+Where MapReduce schedules a container and fires up a JVM for each task, Spark hosts multiple tasks within the same container.
+
+
+
+					
+
+

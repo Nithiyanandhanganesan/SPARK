@@ -1,0 +1,1940 @@
+SCala Cookbook:
+===================
+
+Scala refers to Scalable Language was developed by Martin Odersky in 2003.
+It is both functional as well as object oriented language run on JVM.
+
+Runnnig the scala code:
+=========================
+
+Running the scala code using REPL will easy way to run the single line of code. We can also run the mutiple line code in REPL.
+REPL stands for READ EVALUATE PRINT LOOP. Using :help command in scala shell will provide the availabe option.
+Varible created in the scala session will be available througout the session.
+
+scala> 5 * 7
+res0: Int = 35
+
+From the above example, instead of just printing 5* 7 , scala will print the result by muplity the 5 and 7. If the result is not assingned with any variable,
+scala will automatically assign to the variable named as res[n]. Since it is the first result , it is stored in res0 , whereas second result will be stored in res1
+and so on.We can also the use the variable res0 for next expressions.
+
+The REPL can load and interpret Scala code from an external file with the :load <file> command. 
+Create a new file named Hello.scala and add a command that will print a greeting, then execute it from the REPL.
+
+
+Another way to load external Scala code is to paste it into the REPL in “raw” mode, where the code is compiled as if it were actually in a proper source file. 
+To do this, type :paste -raw, hit Return, and then paste the contents of your source file. 
+After exiting “paste” mode you should see the result.
+
+
+Working with Data: Literals, Values, Variables, and Types:
+================================================================
+
+Literal :  It is nothing but the value that we are assinging to the variable. Eg. a="hello" . "Hello" is the literal here.
+Values  :  Values are immutable storage unit. Once assigned, its value can't be changed.
+Variable : Variables are mutable storage unit. Values can be changed at any time.
+Types    : Types refers to the data type of the variable.
+
+Syntax: val/var <identifier>: <type> = <literal>
+
+
+Val vs Var example:
+-------------------
+
+val a: Int =3;
+a=a+3  //Throws an error
+
+var a:Int=4
+a=a+3;  //Works fine
+
+
+Type inference:
+---------------------
+
+In any programming language initialising the variable or values, we need to mention the data type of the variable.
+Whereas in Scala it will automatically find the the data type based on the assingned value.
+
+scala> val x: Int = 20
+x: Int = 20
+
+scala> val greeting: String = "Hello, World"
+greeting: String = Hello, World
+
+scala> val atSymbol: Char = '@'
+atSymbol: Char = @
+
+scala> val yellowRgb = 0xffff00
+yellowRgb: Int = 16776960
+
+scala> val id= 100l
+id: Long = 100
+
+
+Identifier:
+-------------
+
+Here are the rules for combining letters, numbers, and characters into valid identifiers in Scala:
+A letter followed by zero or more letters and digits.
+A letter followed by zero or more letters and digits, then an underscore (_), and then one or more of either letters and digits or operator characters.
+One or more operator characters.
+One or more of any character except a backquote, all enclosed in a pair of back-quotes.
+
+
+Data Types:
+-------------
+
+Scala support both numeric and non-numeric data type.
+Casting can be done in scala using 'toType' method.
+
+Eg: 
+scala> val l: Long = 20
+l: Long = 20
+
+scala> val i: Int = l.toInt
+i: Int = 20
+
+
+String interpolation:
+-------------------------
+
+The String type represents “strings” of text.
+We can use (==) operator to find the equality between two strings. In Java , (==) operator only find the object reference equality whereas in scala it finds the
+equality between value of the object.
+
+
+scala> val greeting = "Hello, " + "World"
+greeting: String = Hello, World
+
+scala> val matched = (greeting == "Hello, World")
+matched: Boolean = true
+
+Also, we can muptiply the string the integer.
+
+scala> val theme = "Na " * 5 + "Batman!"
+Na Na Na Na Na Batman!
+
+A multiline String can be created using triple-quotes.
+
+scala> println("Pi, using 355/113, is about " + approx + "." )
+Pi, using 355/113, is about 3.141593.
+
+Using the above prinln statement we can build the string and print the variable. But below is the more direct way to recognize the varible directly.
+It is called as string interpolation.
+
+scala> println(s"Pi, using 355/113, is about $approx." )
+Pi, using 355/113, is about 3.141593.
+
+You will need the optional braces if you have any nonword characters in your reference (such as a calculation)
+
+scala> s"Fish n chips n vinegar, ${"pepper "*3}salt"
+res1: String = Fish n chips n vinegar, pepper pepper pepper salt
+
+You can also use 'f' notaion if we want to format the output character.
+
+scala> val item = "apple"
+item: String = apple
+
+scala> f"I wrote a new $item%.3s today"
+res2: String = I wrote a new app today
+
+scala> f"Enjoying this $item ${355/113.0}%.5f times today"
+res3: String = Enjoying this apple 3.14159 times today
+
+
+Data Types:
+--------------
+
+Ref : Figure 1
+
+
+
+Char vs INt:
+------------------
+
+scala> val c = 'A'
+c: Char = A
+
+scala> val i: Int = c
+i: Int = 65
+
+scala> val t: Char = 116
+t: Char = t
+
+
+The Boolean comparison operators && and || are lazy in that they will not bother evaluating the second argument if the first argument is sufficient. 
+The operators & and | will always check both arguments before returning a result.
+
+Unit type is similarly used in Scala as the return type for functions or expressions that don’t return anything. 
+It is similar to the void keyword used in Java. The Unit literal is an empty pair of parentheses, (),
+
+scala> val nada = ()
+nada: Unit = ()
+
+Type Operations:
+----------------------
+
+Refer figure2
+
+
+Tuples:
+--------
+
+A tuple is an ordered container of two or more values, all of which may have different types. 
+ Unlike lists and arrays, however, there is no way to iterate through elements in a tuple. Its purpose is only as a container for more than one value.
+
+
+scala> val info = (5, "Korben", true)
+info: (Int, String, Boolean) = (5,Korben,true)
+
+scala> val name = info._2
+name: String = Korben
+
+scala> val red = "red" -> "0xff0000"
+red: (String, String) = (red,0xff0000)
+
+scala> val reversed = red._2 -> red._1
+reversed: (String, String) = (0xff0000,red)
+
+
+3. Expressions and Conditionals:
+=============================================================================
+
+An expression is a single unit of code that returns a value.
+
+scala> "hel" + 'l' + "o"
+res1: String = hello
+
+Syntax:  val <identifier>[: <type>] = <expression>
+
+
+Expression Blocks:
+-------------------
+
+Multiple expressions can be combined using curly braces ({ and }) to create a single expression block.
+The last expression in the block is the return value for the entire block.
+
+scala> val amount = { var x = 5 * 20; x + 10 }
+amount: Int = 110
+
+In the above example, the last statment of the expression block is "x+10" which acts as a return value for the block.
+
+scala> val amount = { var x = 5 * 20; x=x + 10 }
+amount: Unit = ()
+
+In the above example, the last statement is not the return statement. So, it does not return anything. So the return type of the expression block is Unit() type.
+
+
+Also, we can write the statement with semicolon by separating it into new line.
+
+scala> val amount = {
+     |   val x = 5 * 20
+     |   x + 10
+     | }
+amount: Int = 110
+
+scala> { val a = 1; { val b = a * 2; { val c = b + 4; c } } }
+res5: Int = 6
+
+
+Statements:
+-------------
+
+A statement is just an expression that doesn’t return a value. Statements have a return type of Unit.
+
+scala> val x = 1
+x: Int = 1
+
+If..Else Expression Blocks:
+------------------------------
+
+scala> if ( 47 % 3 > 0 ) println("Not a multiple of 3")
+Not a multiple of 3
+
+scala> val result = if ( false ) "what does this return?"
+result: Any = ()
+
+Either a String or Unit could have been returned, so the compiler chose the root class Any. 
+
+scala> val max = if (x > y) x else y
+max: Int = 20
+
+var a=10; var b="hello"
+
+val res=if(1>2) a else b;
+res:Any =hello
+
+Above statement has return type Any because it has possibilites to return noth numeric as well as string. So, it chooses the parent type.
+
+
+Match Expressions:
+----------------------
+
+Match expressions are akin to C’s and Java’s “switch” statements, where a single 
+input item is evaluated and the first pattern that is “matched” is executed and its value returned.
+
+scala> val x = 10; val y = 20
+x: Int = 10
+y: Int = 20
+
+scala> val max = x > y match {
+     |   case true => x
+     |   case false => y
+     | }
+max: Int = 20
+
+Above logic works out to the same as in the “if .. else” block but is implemented differently.
+
+
+scala> val status = 500
+status: Int = 500
+
+scala> val message = status match {
+     |     case 200 =>
+     |         "ok"
+     |     case 400 => {
+     |         println("ERROR - we called the service incorrectly")
+     |         "error"
+     |     }
+     |     case 500 => {
+     |         println("ERROR - the service encountered an error")
+     |         "error"
+     |     }
+     | }
+ERROR - the service encountered an error
+message: String = error
+
+The pattern alternative makes it possible to prevent duplicated code by reusing the same case block for multiple patterns.
+
+scala> val kind = day match {
+     |   case "MON" | "TUE" | "WED" | "THU" | "FRI" =>
+     |     "weekday"
+     |   case "SAT" | "SUN" =>
+     |     "weekend"
+     | }
+kind: String = weekday
+
+
+If there is no any match , it will throw an runtime error.
+
+scala> "match me" match { case "nope" => "sorry" }
+scala.MatchError: match me (of class java.lang.String)
+  ... 32 elided
+
+In order to overcome the above error, scala provide two methods:
+ 
+   -Varibale/Value binding
+    ------------------------
+
+         The keyword "other" is used. If nothing matches , other block will get executed.
+
+         scala> val message = "Ok"
+	message: String = Ok
+
+	scala> val status = message match {
+     	|   case "Ok" => 200
+     	|   case other => {
+     	|     println(s"Couldn't parse $other")
+     	|     -1
+     	|   }
+     	| }
+	status: Int = 200
+         
+   -Wildcard
+    ---------
+        Underscore (_) is used for this purpose.
+
+        scala> val message = "Unauthorized"
+	message: String = Unauthorized
+
+	scala> val status = message match {
+    	 |   case "Ok" => 200
+    	 |   case _ => {
+    	 |     println(s"Couldn't parse $message")
+    	 |     -1
+    	 |   }
+     	| }
+	Couldn't parse Unauthorized
+	status: Int = -1
+
+
+Loops:
+-----------
+
+Range:
+-------
+
+Ranges are created using the to or until operator with starting and ending integers
+
+<starting integer> [to|until] <ending integer> [by increment]
+
+Eg: 1 to 10 by 2
+
+For loop:
+----------
+
+Syntax: Iterating with a Basic For-Loop
+for (<identifier> <- <iterator>) [yield] [<expression>]
+
+In the above syntax yield parameter is optional. If we want to access the return values of the expression we have to use yield parameter.
+
+
+eg: 
+
+scala> for (x <- 1 to 7) { println(s"Day $x:") }
+
+scala> for (x <- 1 to 7) yield { s"Day $x:" }
+res0: scala.collection.immutable.IndexedSeq[String] = Vector(Day 1:,
+Day 2:, Day 3:, Day 4:, Day 5:, Day 6:, Day 7:)
+
+
+
+scala> for (day <- res0) print(day + ", ")
+Day 1:, Day 2:, Day 3:, Day 4:, Day 5:, Day 6:, Day 7:,
+
+For loop with iterator Guard:
+------------------------------
+
+scala> val threes = for (i <- 1 to 20 if i % 3 == 0) yield i
+threes: scala.collection.immutable.IndexedSeq[Int] = Vector(3, 6, 9, 12, 15, 18)     /*Iterator Guard*/
+
+
+scala> val quote = "Faith,Hope,,Charity"
+quote: String = Faith,Hope,,Charity
+
+scala> for {
+     |   t <- quote.split(",")
+     |   if t != null
+     |   if t.size > 0
+     | }
+     | { println(t) }
+Faith
+Hope
+Charity
+
+Nested iterators:
+-------------------
+Nested iterators are extra iterators added to a for-loop, multiplying the total number of iterations by their iterator count.
+
+scala> for { x <- 1 to 2
+     |       y <- 1 to 3 }
+     | { print(s"($x,$y) ") }   /*nested loop*/
+
+Value binding in for loop:
+---------------------------
+
+A common tactic in for-loops is to define temporary values or variables inside the expression block based on the current iteration. 
+An alternate way to do this in Scala is to use value binding in the for-loop’s definition, which works the same but can help to minimize 
+the size and complexity of the expression block.
+
+scala> val x = for (i <- 0 to 8; pow = i + 2) yield pow   /*value binding*/
+
+
+
+Do-while:
+---------------
+
+Syntax: while (<Boolean expression>) statement
+
+scala> var x = 10; while (x > 0) x -= 1
+x: Int = 0
+
+scala> do println(s"Here I am, x = $x") while (x > 0)
+Here I am, x = 0
+
+
+FUNCTIONS:
+===================================================================
+
+
+Input-less Function:
+---------------------
+
+scala> def hi = "hi"
+hi: String
+
+scala> hi
+res0: String = hi
+
+Function with a Return Type:
+----------------------------
+
+scala> def hi: String = "hi"
+hi: String
+
+Defining a Function:
+--------------------
+
+final line becomes the return value of the expression.
+
+
+scala> def multiplier(x: Int, y: Int): Int = { x * y }
+multiplier: (x: Int, y: Int)Int
+scala> multiplier(6, 7)
+res0: Int = 42
+
+there are times when you need to exit and return a value before the end of the function’s expression block. 
+You can use the return keyword to specify a function’s return value explicitly and exit the function.
+
+scala> def safeTrim(s: String): String = {
+     |   if (s == null) return null
+     |   s.trim()
+     | }
+safeTrim: (s: String)String
+
+
+Procedures:
+-------------
+
+A procedure is a function that doesn’t have a return value. Any function that ends with a statement, such as a println() call, is also a procedure. 
+
+
+scala> def log(d: Double) = println(f"Got value $d%.2f")
+log: (d: Double)Unit
+
+scala> def log(d: Double): Unit = println(f"Got value $d%.2f")
+log: (d: Double)Unit
+
+scala> log(2.23535)
+Got value 2.24
+
+
+Function with Empty Parentheses:
+--------------------------------
+
+scala> def hi(): String = "hi"
+hi: ()String
+
+scala> hi()
+res1: String = hi
+
+scala> hi
+res2: String = hi
+
+Function with an Expression Block:
+-----------------------------------
+
+scala> def formatEuro(amt: Double) = f"€$amt%.2f"
+formatEuro: (amt: Double)String
+
+scala> formatEuro(3.4645)
+res4: String = €3.46
+
+scala> formatEuro { val rate = 1.32; 0.235 + 0.7123 + rate * 5.32 }
+res5: String = €7.97
+
+Recursive Functions:
+----------------------
+
+scala> def power(x: Int, n: Int): Long = {
+     |   if (n >= 1) x * power(x, n-1)
+     |   else 1
+     | }
+power: (x: Int, n: Int)Long
+
+scala> power(2, 8)
+res6: Long = 256
+
+tail-recursion function:
+---------------------------
+
+recursive functions is running into the dreaded “Stack Overflow” error.  
+the Scala compiler can optimize some recursive functions with tail-recursion so that recursive calls do not use additional stack space.
+ function annotation available to mark a function as being intended to be optimized for tail-recursion. 
+add the text @annotation.tailrec before the function definition or on the previous line.
+
+
+scala> @annotation.tailrec
+     | def power(x: Int, n: Int): Long = {
+     |   if (n >= 1) x * power(x, n-1)
+     |   else 1
+     | }
+<console>:9: error: could not optimize @tailrec annotated method power:
+it contains a recursive call not in tail position
+         if (n >= 1) x * power(x, n-1)
+
+Ah, the function couldn’t be optimized because the recursive call is not the last statement in the function. 
+This is understandable. I’ll switch the “if” and “else” conditions and try again:
+
+scala> @annotation.tailrec
+     | def power(x: Int, n: Int): Long = {
+     |   if (n < 1) 1
+     |   else x * power(x, n-1)
+     | }
+<console>:11: error: could not optimize @tailrec annotated method power:
+it contains a recursive call not in tail position
+         else x * power(x, n-1)
+                ^
+
+Hmm, the recursive call is the last item in the function. 
+Oh I see, we’re taking the result of the recursive call and multiplying it by a value, 
+so that multiplication is actually the last statement in the function, not the recursive call.
+A good way to fix this is to move the multiplication into the beginning of the invoked function instead of multiplying its result. 
+
+Now the end of the function is a simple untouched result from the recursive call:
+scala> @annotation.tailrec
+     | def power(x: Int, n: Int, t: Int = 1): Int = {
+     |   if (n < 1) t
+     |   else power(x, n-1, x*t)
+     | }
+power: (x: Int, n: Int, t: Int)Int
+
+scala> power(2,8)
+res9: Int = 256
+Success! The “tailrec” annotation and successful compile guarantees that the function will be optimized with tail-recursion, 
+so that each successive call will not add more stack frames.
+
+
+Nested Functions:
+-------------------
+
+scala> def max(a: Int, b: Int, c: Int) = {
+     |   def max(x: Int, y: Int) = if (x > y) x else y
+     |   max(a, max(b, c))
+     | }
+max: (a: Int, b: Int, c: Int)Int
+
+scala> max(42, 181, 19)
+res10: Int = 181
+
+Calling Functions with Named Parameters:
+-------------------------------------------
+
+scala> def greet(prefix: String, name: String) = s"$prefix $name"
+greet: (prefix: String, name: String)String
+
+scala> val greeting1 = greet("Ms", "Brown")
+greeting1: String = Ms Brown
+
+scala> val greeting2 = greet(name = "Brown", prefix = "Mr")
+greeting2: String = Mr Brown
+
+
+Parameters with Default Values:
+-------------------------------
+
+This is two overcome the function overloading.
+
+scala> def greet(prefix: String = "", name: String) = s"$prefix$name"
+greet: (prefix: String, name: String)String
+
+scala> val greeting1 = greet(name = "Paul")
+greeting1: String = Paul
+
+scala> val greeting1 = greet(prefix="hi",name = "Paul")
+greeting1: String = Paul
+
+
+Vararg Parameters:
+-------------------
+
+scala> def sum(items: Int*): Int = {
+     |   var total = 0
+     |   for (i <- items) total += i
+     |   total
+     | }
+sum: (items: Int*)Int
+
+scala> sum(10, 20, 30)
+res11: Int = 60
+
+scala> sum()
+res12: Int = 0
+
+Parameter Groups:
+------------------
+
+scala> def max(x: Int)(y: Int) = if (x > y) x else y
+max: (x: Int)(y: Int)Int
+
+scala> val larger = max(20)(39)
+larger: Int = 39
+
+Type Parameters:
+------------------
+
+def identity(s: String): String = s
+def identity(i: Int): Int = i
+
+scala> def identity(a: Any): Any = a
+identity: (a: Any)Any
+
+scala> val s: String = identity("Hello")
+<console>:8: error: type mismatch;
+ found   : Any
+ required: String
+       val s: String = identity("Hello")
+                               ^
+
+he solution? Instead of defining the function to use a specific type (e.g., String or Int) or a generic “root” type (e.g., Any), 
+parameterize the type so it will suit whatever callers want to use.
+
+
+scala> def identity[A](a: A): A = a
+identity: [A](a: A)A
+
+scala> val s: String = identity[String]("Hello")
+s: String = Hello
+
+scala> val d: Double = identity[Double](2.717)
+d: Double = 2.717
+
+another excellent feature that we know Scala provides is type inference. 
+In the preceding example it wasn’t really necessary to pass the [String] type parameter to the “identity” method 
+
+scala> val s: String = identity("Hello")
+s: String = Hello
+
+scala> val d: Double = identity(2.717)
+d: Double = 2.717
+
+
+scala> val s = identity("Hello")
+s: String = Hello
+
+scala> val d = identity(2.717)
+d: Double = 2.717
+
+Methods and Operators:
+------------------------
+
+A method is a function defined in a class and available from any instance of the class. 
+ The standard way to invoke methods in Scala (as in Java and Ruby) is with infix dot notation,
+ where the method name is prefixed by the name of its instance and the dot (.) separator.
+
+scala> val s = "vacation.jpg"
+s: String = vacation.jpg
+
+scala> val isJPEG = s.endsWith(".jpg")
+isJPEG: Boolean = true
+If it isn’t clear, the value s is an instance of type String, and the String class has a method called endsWith(). 
+In the future we’ll refer to methods using the full class name, like String.endsWith().
+
+scala> d.+(2.721)
+res16: Double = 68.363
+
+method has a single character as its name, the addition operator (+), but is still a valid function that takes a 
+single parameter and returns the sum of d and the parameter. 
+
+===============================================================
+First-Class Functions:
+===============================================================
+
+A Function Type:
+--------------------
+
+scala> def double(x: Int): Int = x * 2
+double: (x: Int)Int
+
+scala> double(5)
+res0: Int = 10
+
+scala> val myDouble: (Int) => Int = double                                1 myDouble: Int => Int = <function1>
+
+scala> myDouble(5)                                                        2 res1: Int = 10
+
+scala> val myDoubleCopy = myDouble
+myDoubleCopy: Int => Int = <function1>
+
+scala> myDoubleCopy(5)                                                    3 res2: Int = 10
+
+
+
+myDouble is just a value, except that unlike other values it can be invoked.
+Invoking myDouble as a function has the same result as invoking double.
+Assigning a function value to a new value works as with any other
+
+
+Function with the Wildcard Operator:
+------------------------------------
+
+scala> def double(x: Int): Int = x * 2
+double: (x: Int)Int
+
+scala> val myDouble = double _
+myDouble: Int => Int = <function1>
+
+scala> val amount = myDouble(20)
+amount: Int = 40
+This time, the explicit function type for myDouble wasn’t required to distinguish it from a function invocation. 
+The underscore (_) served as a placeholder for a future invocation of the function, 
+returning a function value that we could store in myDouble.
+
+Above scenario with two parameters:
+
+scala> def max(a: Int, b: Int) = if (a > b) a else b
+max: (a: Int, b: Int)Int
+
+scala> val maximize: (Int, Int) => Int = max
+maximize: (Int, Int) => Int = <function2>
+
+scala> maximize(50, 30)
+res3: Int = 50
+
+Above scenario with no parameters:
+
+scala> def logStart() = "=" * 50 + "\nStarting NOW\n" + "=" * 50
+logStart: ()String
+
+scala> val start: () => String = logStart
+start: () => String = <function0>
+
+scala> println( start() )
+==================================================
+Starting NOW
+==================================================
+
+
+Higher-Order Functions:
+================================
+
+A higher-order function is a function that has a value with a function type as an input parameter or return value.
+
+scala> def safeStringOp(s: String, f: String => String) = {
+     |   if (s != null) f(s) else s
+     | }
+safeStringOp: (s: String, f: String => String)String
+
+scala> def reverser(s: String) = s.reverse
+reverser: (s: String)String
+
+scala> safeStringOp(null, reverser)
+res4: String = null
+
+scala> safeStringOp("Ready", reverser)
+res5: String = ydaeR
+
+Function Literals:
+--------------------
+
+scala> val doubler = (x: Int) => x * 2
+doubler: Int => Int = <function1>
+
+scala> val doubled = doubler(22)
+doubled: Int = 44
+
+scala> val greeter = (name: String) => s"Hello, $name"
+greeter: String => String = <function1>
+
+scala> val hi = greeter("World")
+hi: String = Hello, World
+
+
+scala> def max(a: Int, b: Int) = if (a > b) a else b            /*original max function            
+max: (a: Int, b: Int)Int
+
+scala> val maximize: (Int, Int) => Int = max                    /* assgined to function value
+
+scala> val maximize = (a: Int, b: Int) => if (a > b) a else b   /*redifined with function literal            
+
+scala> maximize(84, 96)
+res6: Int = 96
+
+
+Above scenario with no parameter:
+
+scala> val start = () => "=" * 50 + "\nStarting NOW\n" + "=" * 50
+start: () => String = <function0>
+
+function literals can be defined inside of higher-order function invocations.
+
+scala> def safeStringOp(s: String, f: String => String) = {
+     |   if (s != null) f(s) else s
+     | }
+safeStringOp: (s: String, f: String => String)String
+
+scala> safeStringOp(null, (s: String) => s.reverse)
+res7: String = null
+
+scala> safeStringOp("Ready", (s: String) => s.reverse)
+res8: String = ydaeR
+
+Let’s invoke the “safeStringOp” function again with a function literal that uses this simpler syntax:
+scala> safeStringOp(null, s => s.reverse)
+res9: String = null
+
+scala> safeStringOp("Ready", s => s.reverse)
+res10: String = ydaeR
+
+
+Placeholder Syntax:
+-----------------------
+
+Placeholder syntax is a shortened form of function literals, replacing named parameters with wildcard operators (_)
+
+scala> val doubler: Int => Int = _ * 2
+doubler: Int => Int = <function1>
+
+scala> def safeStringOp(s: String, f: String => String) = {
+     |   if (s != null) f(s) else s
+     | }
+safeStringOp: (s: String, f: String => String)String
+
+scala> safeStringOp(null, _.reverse)
+res11: String = null
+
+scala> safeStringOp("Ready", _.reverse)
+res12: String = ydaeR
+
+The body of the function literal is operationally the same as s => s.reverse, but simplified with placeholder syntax. 
+
+Let’s demonstrate how this ordering of placeholders works by trying an example with two placeholders:
+scala> def combination(x: Int, y: Int, f: (Int,Int) => Int) = f(x,y)
+combination: (x: Int, y: Int, f: (Int, Int) => Int)Int
+
+scala> combination(23, 12, _ * _)
+res13: Int = 276
+
+
+scala> def tripleOp(a: Int, b: Int, c: Int, f: (Int, Int, Int) => Int) = f(a,b,c)
+tripleOp: (a: Int, b: Int, c: Int, f: (Int, Int, Int) => Int)Int
+
+scala> tripleOp(23, 92, 14, _ * _ + _)
+res14: Int = 2130
+
+
+The tripleOp function takes four parameters: three Int values and a function that can reduce them down to a single Int. 
+This example function, tripleOp, is limited to integer values. 
+
+scala> def tripleOp[A,B](a: A, b: A, c: A, f: (A, A, A) => B) = f(a,b,c)
+tripleOp: [A, B](a: A, b: A, c: A, f: (A, A, A) => B)B
+
+scala> tripleOp[Int,Int](23, 92, 14, _ * _ + _)
+res15: Int = 2130
+
+scala> tripleOp[Int,Double](23, 92, 14, 1.0 * _ / _ / _)
+res16: Double = 0.017857142857142856
+
+scala> tripleOp[Int,Boolean](93, 92, 14, _ > _ + _)
+res17: Boolean = false
+
+
+Partially Applied Functions and Currying:
+------------------------------------------
+
+scala> def factorOf(x: Int, y: Int) = y % x == 0
+factorOf: (x: Int, y: Int)Boolean
+If you want a shortcut to the function without retaining any parameters, you can use the wildcard operator (_) assignment we covered in this chapter’s introduction:
+scala> val f = factorOf _
+f: (Int, Int) => Boolean = <function2>
+
+scala> val x = f(7, 20)
+x: Boolean = false
+
+If you want to retain some of the parameters, you can partially apply the function by using the wildcard operator to take the place of one of the parameters.
+scala> val multipleOf3 = factorOf(3, _: Int)
+multipleOf3: Int => Boolean = <function1>
+
+scala> val y = multipleOf3(78)
+y: Boolean = true
+
+Currying function:
+--------------------
+
+scala> def factorOf(x: Int)(y: Int) = y % x == 0
+factorOf: (x: Int)(y: Int)Boolean
+
+scala> val isEven = factorOf(2) _
+isEven: Int => Boolean = <function1>
+
+scala> val z = isEven(32)
+z: Boolean = true
+
+By-Name Parameters:
+----------------------
+
+An alternate form of a function type parameter is a by-name parameter, which can take either a value or a function that eventually returns the value. 
+
+Partial Functions:
+-------------------
+
+All of the functions we have studied so far are known as total functions, because they properly support every possible value that meets the type of the input parameters. 
+
+For example, a function that returns the square root of the input number would certainly not work if the input number was negative. Likewise, a function that divides by a given number isn’t applicable if that number is zero. Such functions are called partial functions because they can only partially apply to their input data.
+
+
+Common Collections:
+======================
+
+A collections framework provides data structures for collecting one or more values of a given type such as arrays, lists, maps, sets, and trees.
+
+List:
+-------
+
+List type, an immutable singly linked list. 
+
+scala> val numbers = List(32, 95, 24, 21, 17)
+numbers: List[Int] = List(32, 95, 24, 21, 17)
+
+scala> var total = 0; for (i <- numbers) { total += i }
+total: Int = 189
+
+scala> val colors = List("red", "green", "blue")
+colors: List[String] = List(red, green, blue)
+
+scala> println(s"I have ${colors.size} colors: $colors")
+I have 3 colors: List(red, green, blue)
+
+scala> colors(1)
+res2: String = green
+
+scala> colors.foreach( (c: String) => println(c) ) 1 red
+green
+blue
+
+scala> val sizes = colors.map( (c: String) => c.size ) 2 sizes: List[Int] = List(3, 5, 4)
+
+scala> val total = numbers.reduce( (a: Int, b: Int) => a + b ) 3 total: Int = 189
+
+foreach() takes a function (a procedure, to be accurate) and invokes it with every item in the list.
+
+map() takes a function that converts a single list element to another value and/or type.
+
+reduce() takes a function that combines two list elements into a single element.
+
+Set:
+------
+
+A Set is an immutable and unordered collection of unique elements,
+
+scala> val unique = Set(10, 20, 30, 20, 20, 10)
+unique: scala.collection.immutable.Set[Int] = Set(10, 20, 30)
+
+scala> val sum = unique.reduce( (a: Int, b: Int) => a + b )
+sum: Int = 60
+
+Map:
+-----
+A Map is an immutable key-value store, also known as a hashmap
+
+scala> val colorMap = Map("red" -> 0xFF0000, "green" -> 0xFF00,
+  "blue" -> 0xFF)
+colorMap: scala.collection.immutable.Map[String,Int] =
+  Map(red -> 16711680, green -> 65280, blue -> 255)
+
+scala> val redRGB = colorMap("red")
+redRGB: Int = 16711680
+
+scala> val cyanRGB = colorMap("green") | colorMap("blue")
+cyanRGB: Int = 65535
+
+scala> val hasWhite = colorMap.contains("white")
+hasWhite: Boolean = false
+
+scala> for (pairs <- colorMap) { println(pairs) }
+(red,16711680)
+(green,65280)
+(blue,255)
+
+
+scala> val oddsAndEvents = List(List(1, 3, 5), List(2, 4, 6))
+oddsAndEvents: List[List[Int]] = List(List(1, 3, 5), List(2, 4, 6))
+
+scala> val keyValues = List(('A', 65), ('B',66), ('C',67))
+keyValues: List[(Char, Int)] = List((A,65), (B,66), (C,67))
+
+
+
+Here is an iterator built with a while loop that traverses the list until isEmpty returns true:
+scala> val primes = List(2, 3, 5, 7, 11, 13)
+primes: List[Int] = List(2, 3, 5, 7, 11, 13)
+
+scala> var i = primes
+i: List[Int] = List(2, 3, 5, 7, 11, 13)
+
+scala> while(! i.isEmpty) { print(i.head + ", "); i = i.tail }
+2, 3, 5, 7, 11, 13,
+
+Calling isEmpty to check for the end of a list is efficient, but there is yet another efficient way to do this. All lists end with an instance of Nil as their terminus, so an iterator can check for the list’s end by comparing the current element to Nil:
+
+scala> while(i != Nil) { print(i.head + ", "); i = i.tail }
+2, 3, 5, 7, 11, 13,
+
+scala> val l: List[Int] = List()
+l: List[Int] = List()
+
+scala> l == Nil
+res0: Boolean = true
+
+scala> val m: List[String] = List("a")
+m: List[String] = List(a)
+
+scala> m.head
+res1: String = a
+
+scala> m.tail == Nil
+res2: Boolean = true
+;
+
+
+The Cons Operator
+-------------------
+
+scala> val numbers = 1 :: 2 :: 3 :: Nil
+numbers: List[Int] = List(1, 2, 3)
+
+ :: is simply a method in List. It takes a single value that becomes the head of a new list, its tail pointing to the list on which :: was called.
+
+
+scala> val first = Nil.::(1)
+first: List[Int] = List(1)
+
+scala> val second = 2 :: first
+second: List[Int] = List(2, 1)
+
+scala> second.tail == first
+res4: Boolean = true
+
+
+Mapping Lists:
+--------------
+
+Map methods are those that take a function and apply it to every member of a list, collecting the results into a new list.
+
+scala> List(0, 1, 0) collect {case 1 => "ok"}
+res0: List[String] = List(ok)
+
+scala> List("milk,tea") flatMap (_.split(','))
+res1: List[String] = List(milk, tea)
+
+scala> List("milk","tea") map (_.toUpperCase)
+res2: List[String] = List(MILK, TEA)
+
+Reducing Lists:
+--------------
+
+List(41, 59, 26).max
+List(11.3, 23.5, 7.2).sum
+List(34, 29, 18) contains 29
+List(0, 4, 3) endsWith List(4, 3)
+List(24, 17, 32) exists (_ < 18)
+List(24, 17, 32) forall (_ < 18)
+List(0, 4, 3) startsWith List(0)
+
+scala> val validations = List(true, true, false, true, true, true)
+validations: List[Boolean] = List(true, true, false, true, true, true)
+
+scala> val valid1 = !(validations contains false)
+valid1: Boolean = false
+
+scala> val valid2 = validations forall (_ == true)
+valid2: Boolean = false
+
+scala> val valid3 = validations.exists(_ == false) == false
+valid3: Boolean = false
+
+
+List(4, 5, 6).fold(0)(_ + _)
+List(4, 5, 6).foldLeft(0)(_ + _)
+List(4, 5, 6).foldRight(0)(_ + _)
+List(4, 5, 6).reduce(_ + _)
+List(4, 5, 6).reduceRight(_ + _)
+List(4, 5, 6).scan(0)(_ + _)
+List(4, 5, 6).scanLeft(0)(_ + _)
+List(4, 5, 6).scanRight(0)(_ + _)
+
+ could implement the forall Boolean operation on a list of integers with foldLeft but would not be able to do so with fold.
+
+
+Converting Collections:
+------------------------
+
+mkString
+List(24, 99, 104).mkString(", ")
+Renders a collection to a Set using the given delimiters.
+
+toBuffer
+List('f', 't').toBuffer
+Converts an immutable collection to a mutable one.
+
+toList
+Map("a" -> 1, "b" -> 2).toList
+Converts a collection to a List.
+
+toMap
+Set(1 -> true, 3 -> true).toMap
+Converts a collection of 2-arity (length) tuples to a Map.
+
+toSet
+List(2, 5, 5, 3, 2).toSet
+Converts a collection to a Set.
+
+toString
+List(2, 5, 5, 3, 2).toString
+Renders a collection to a String, including the collection’s type.
+
+Pattern Matching with Collections:
+--------------------------------------
+
+scala> val statuses = List(500, 404)
+statuses: List[Int] = List(500, 404)
+
+scala> val msg = statuses.head match {
+     |   case x if x < 500 => "okay"
+     |   case _ => "whoah, an error"
+     | }
+msg: String = whoah, an error
+
+scala> val msg = statuses match {
+     |   case List(404, 500) => "not found & error"
+     |   case List(500, 404) => "error & not found"
+     |   case List(200, 200) => "okay"
+     |   case _ => "not sure what happened"
+     | }
+msg: String = error & not found
+
+scala> val msg = statuses match {
+     |   case List(500, x) => s"Error followed by $x"
+     |   case List(e, x) => s"$e was followed by $x"
+     | }
+msg: String = Error followed by 404
+
+
+scala> val code = ('h', 204, true) match {
+     |   case (_, _, false) => 501
+     |   case ('c', _, true) => 302
+     |   case ('h', x, true) => x
+     |   case (c, x, true) => {
+     |     println(s"Did not expect code $c")
+     |     x
+     |   }
+     | }
+code: Int = 204
+
+Chapter 7. More Collections:
+=====================================================
+
+we can create an immutable map, and then transform it by removing one mapping and adding another:
+
+scala> val m = Map("AAPL" -> 597, "MSFT" -> 40) 1
+m: scala.collection.immutable.Map[String,Int] =
+  Map(AAPL -> 597, MSFT -> 40)
+
+scala> val n = m - "AAPL" + ("GOOG" -> 521)     
+ n: scala.collection.immutable.Map[String,Int] =
+  Map(MSFT -> 40, GOOG -> 521)
+
+
+Creating New Mutable Collections:
+-----------------------------------
+
+Immutable type	Mutable counterpart
+collection.immutable.List   collection.mutable.Buffer
+collection.immutable.Set    collection.mutable.Set
+collection.immutable.Map    collection.mutable.Map
+
+Whereas the collection.immutable package is automatically added to the current namespace in Scala, the collection.mutable package is not. 
+When creating mutable collections, make sure to include the full package name for the type.
+
+
+Arrays:
+-------
+
+An Array is a fixed-size, mutable, indexed collection. 
+
+cala> val colors = Array("red", "green", "blue")
+colors: Array[String] = Array(red, green, blue)
+
+scala> colors(0) = "purple"  
+scala> colors 2 res0: Array[String] = Array(purple, green, blue)
+
+scala> println("very purple: " + colors) 
+ very purple: [Ljava.lang.String;@70cf32e3
+
+Seq and Sequences:
+----------------------
+
+Seq is the root type of all sequences, including linked lists like List and indexed (direct-access) lists like Vector. 
+The Seq shortcut for List linked lists and the IndexedSeq shortcut for Vector indexed lists
+
+Streams:
+------------
+
+Elements are added to the collection only when they are accessed for the first time, 
+in constrast to other immutable collections that receive 100% of their contents at instantiation time. 
+They can also be terminated with Stream.Empty, a counterpart to List.Nil.
+
+scala> def inc(i: Int): Stream[Int] = Stream.cons(i, inc(i+1))
+inc: (i: Int)Stream[Int]
+
+scala> val s = inc(1)
+s: Stream[Int] = Stream(1, ?)
+
+scala> val l = s.take(5).toList
+l: List[Int] = List(1, 2, 3, 4, 5)
+
+scala> s
+res1: Stream[Int] = Stream(1, 2, 3, 4, 5, ?)
+
+An alternate syntax for the Stream.cons operator is the slightly cryptic #:: operator
+
+Monadic Collections:
+----------------------
+The term “monadic” applies in its Greek origins to mean a single unit
+
+Option Collections:
+-----------------------
+As a collection whose size will never be larger than one, the Option type represents the presence or absence of a single value.
+The Option type is itself unimplemented but relies on two subtypes for 
+the implementation: Some, a type-parameterized collection of one element; and None, an empty collection. 
+
+scala> var x: String = "Indeed"
+x: String = Indeed
+
+scala> var a = Option(x)
+a: Option[String] = Some(Indeed)
+
+scala> x = null
+x: String = null
+
+scala> var b = Option(x)
+b: Option[String] = None
+
+
+scala> def divide(amt: Double, divisor: Double): Option[Double] = { 
+     |   if (divisor == 0) None
+     |   else Option(amt / divisor)  | }
+divide: (amt: Double, divisor: Double)Option[Double]
+
+scala> val legit = divide(5, 2)
+legit: Option[Double] = Some(2.5) 
+scala> val illegit = divide(3, 0)
+illegit: Option[Double] = None 
+
+
+scala> val odds = List(1, 3, 5)
+odds: List[Int] = List(1, 3, 5)
+
+scala> val firstOdd = odds.headOption
+firstOdd: Option[Int] = Some(1)
+
+scala> val evens = odds filter (_ % 2 == 0)
+evens: List[Int] = List()
+
+scala> val firstEven = evens.headOption
+firstEven: Option[Int] = None
+
+scala> val words = List("risible", "scavenger", "gist")
+words: List[String] = List(risible, scavenger, gist)
+
+scala> val uppercase = words find (w => w == w.toUpperCase)
+uppercase: Option[String] = None
+
+scala> val lowercase = words find (w => w == w.toLowerCase)
+lowercase: Option[String] = Some(risible)
+In a way, we have used list reduction operations to reduce a collection down to a single Option.
+
+Try Collections:
+------------------
+
+The util.Try collection turns error handling into collection management.
+It provides a mechanism to catch errors that occur in a given function parameter, returning either the error or the result of the function if successful.
+
+
+
+scala> def loopAndFail(end: Int, failAt: Int): Int = {
+     |   for (i <- 1 to end) {
+     |     println(s"$i) ")
+     |     if (i == failAt) throw new Exception("Too many iterations")
+     |   }
+     |   end
+     | }
+loopAndFail: (end: Int, failAt: Int)Int
+
+scala> loopAndFail(10, 3)
+1)
+2)
+3)
+java.lang.Exception: Too many iterations
+  at $anonfun$loopAndFail$1.apply$mcVI$sp(<console>:10)
+  at $anonfun$loopAndFail$1.apply(<console>:8)
+  at $anonfun$loopAndFail$1.apply(<console>:8)
+  at scala.collection.immutable.Range.foreach(Range.scala:160)
+  at .loopAndFail(<console>:8)
+  ... 32 elided
+
+The util.Try type, like Option, is unimplemented but has two implemented subtypes, Success and Failure. 
+The Success type contains the return value of the attempted expression if no exception was thrown, and the Failure type contains the thrown Exception.
+
+scala> val t1 = util.Try( loopAndFail(2, 3) ) 
+1)
+2)
+t1: scala.util.Try[Int] = Success(2) 
+scala> val t2 = util.Try{ loopAndFail(4, 2) } 
+ 1)
+2)
+t2: scala.util.Try[Int] = Failure(
+  java.lang.Exception: Too many iterations) 
+
+scala> val input = " 123 "
+input: String = " 123 "
+
+scala> val result = util.Try(input.toInt) orElse util.Try(input.trim.toInt)
+result: scala.util.Try[Int] = Success(123)
+
+scala> result foreach { r => println(s"Parsed '$input' to $r!") }
+Parsed ' 123 ' to 123!
+
+scala> val x = result match {
+     |   case util.Success(x) => Some(x)
+     |   case util.Failure(ex) => {
+     |     println(s"Couldn't parse input '$input'")
+     |     None
+     |   }
+     | }
+x: Option[Int] = Some(123)
+
+Future Collections:
+--------------------
+
+concurrent.Future, which initiates a background task.
+
+scala> val f = concurrent.Future { Thread.sleep(5000); println("hi") }
+f: scala.concurrent.Future[Unit] =
+  scala.concurrent.impl.Promise$DefaultPromise@4aa3d36
+
+scala> println("waiting")
+waiting
+
+scala> hi
+The background task, after sleeping for 5 seconds (i.e., 5,000 milliseconds), printed the “hi” message. 
+In the meantime, our code in the “main” thread had time to print a “waiting” message before the background task completed.
+
+fallbackTo
+nextFtr(1) fallbackTo nextFtr(2)
+Chains the second future to the first and returns a new overall future. If the first is unsuccessful, the second is invoked.
+
+
+Classes:
+========================================
+
+scala> class User
+defined class User
+
+scala> val u = new User
+u: User = User@7a8c8dcf
+
+scala> val isAnyRef = u.isInstanceOf[AnyRef]
+isAnyRef: Boolean = true
+
+Let’s redesign our User class and make it more useful.
+
+scala> class User {
+     |   val name: String = "Yubaba"
+     |   def greet: String = s"Hello from $name"
+     |   override def toString = s"User($name)"
+     | }
+defined class User
+
+scala> val u = new User
+u: User = User(Yubaba)
+
+scala> println( u.greet )
+Hello from Yubaba
+
+Let’s make this a bit more useful by converting the “name” field from a fixed value to a parameterized value. 
+
+scala> class User(n: String) {
+     |   val name: String = n
+     |   def greet: String = s"Hello from $name"
+     |   override def toString = s"User($name)"
+     | }
+defined class User
+
+scala> val u = new User("Zeniba")
+u: User = User(Zeniba)
+
+scala> println(u.greet)
+Hello from Zeniba
+
+Instead of using a class parameter for intitialization purposes, we can instead declare one of the fields as a class parameter. 
+
+scala> class User(val name: String) {
+     |   def greet: String = s"Hello from $name"
+     |   override def toString = s"User($name)"
+     | }
+defined class User
+
+Here’s an example of using this new class with lists:
+
+scala> val users = List(new User("Shoto"), new User("Art3mis"),new User("Aesch"))
+users: List[User] = List(User(Shoto), User(Art3mis), User(Aesch)) 
+
+scala> val sizes = users map (_.name.size)                        
+sizes: List[Int] = List(8, 7, 5)
+
+scala> val sorted = users sortBy (_.name)
+sorted: List[User] = List(User(Aesch), User(Art3mis), User(Shoto))
+
+scala> val third = users find (_.name contains "3")                
+third: Option[User] = Some(User(Art3mis))
+
+scala> val greet = third map (_.greet) getOrElse "hi"              
+greet: String = Hello from Art3mis
+
+
+A class can extend up to one other class in Scala with the extends keyword, and override (i.e., supplant) the 
+behavior of an inherited method with the override keyword. 
+The fields and methods in a class can be accessed (if strictly necessary) with the this keyword, while the fields and methods in the parent class(es) 
+can be accessed with the super keyword. 
+The super keyword is especially useful when a method needs to still access the similar method in its parent class that it is overriding.
+
+scala> class A {
+     |   def hi = "Hello from A"
+     |   override def toString = getClass.getName
+     | }
+defined class A
+
+scala> class B extends A
+defined class B
+
+scala> class C extends B { override def hi = "hi C -> " + super.hi }
+defined class C
+
+scala> val hiA = new A().hi
+hiA: String = Hello from A
+
+scala> val hiB = new B().hi
+hiB: String = Hello from A
+
+scala> val hiC = new C().hi
+hiC: String = hi C -> Hello from A
+
+Let’s try out Scala’s polymorphism next:
+
+We’ll reuse the A, B, and C classes we defined to test this out:
+scala> val a: A = new A
+a: A = A
+
+scala> val a: A = new B
+a: A = B
+
+scala> val b: B = new A
+<console>:9: error: type mismatch;
+ found   : A
+ required: B
+       val b: B = new A
+                  ^
+
+scala> val b: B = new B
+b: B = B
+
+Storing an instance with the same type as its value works every time, as does storing an instance of a subclass into a value with its parent class’s type. 
+However, storing an instance of a parent class into a value of the type of its subclass won’t work. 
+
+scala> val misc = List(new C, new A, new B)
+misc: List[A] = List(C, A, B)
+
+scala> val messages = misc.map(_.hi).distinct.sorted
+messages: List[String] = List(Hello from A, hi C -> Hello from A)
+
+I forgot to add an explicit type. 
+Fortunately, the Scala compiler was able to infer the common type of the three instances as being A, the parent class, and set the list’s type parameter correctly. 
+
+Defining Classes:
+--------------------
+
+Syntax: Defining a Simple Class
+class <identifier> [extends <identifier>] [{ fields, methods, and classes }]
+
+Syntax: Defining a Class with Input Parameters:
+class <identifier> ([val|var] <identifier>: <type>[, ... ])
+                   [extends <identifier>(<input parameters>)]
+                   [{ fields and methods }]
+
+
+scala> class Car(val make: String, var reserved: Boolean) {
+     |   def reserve(r: Boolean): Unit = { reserved = r }
+     | }
+defined class Car
+
+scala> val t = new Car("Toyota", false)
+t: Car = Car@4eb48298
+
+scala> t.reserve(true)
+
+scala> println(s"My ${t.make} is now reserved? ${t.reserved}")
+My Toyota is now reserved? true
+
+scala> class Car(val make: String, var reserved: Boolean) {
+     |   def reserve(r: Boolean): Unit = { reserved = r }
+     | }
+defined class Car
+
+scala> class Lotus(val color: String, reserved: Boolean) extends
+  Car("Lotus", reserved)
+defined class Lotus
+
+scala> val l = new Lotus("Silver", false)
+l: Lotus = Lotus@52c46334
+
+scala> println(s"Requested a ${l.color} ${l.make}")
+Requested a Silver Lotus
+
+Defining a Class with Input Parameters and Default Values:
+---------------------------------------------------------
+
+scala> class Car(val make: String, var reserved: Boolean = true,
+     |           val year: Int = 2015) {
+     |   override def toString = s"$year $make, reserved = $reserved"
+     | }
+defined class Car
+
+scala> val a = new Car("Acura")                                   
+a: Car = 2015 Acura, reserved = true
+
+scala> val l = new Car("Lexus", year = 2010)                      
+l: Car = 2010 Lexus, reserved = true
+
+scala> val p = new Car(reserved = false, make = "Porsche")        
+p: Car = 2015 Porsche, reserved = false
+
+Defining a Class with Type Parameters:
+-----------------------------------------
+
+Let’s create our own collection and use a type parameter to ensure type safety. The new collection will extend Traversable[A], the parent class of Iterable.
+
+scala> class Singular[A](element: A) extends Traversable[A] {     
+     |   def foreach[B](f: A => B) = f(element)                   
+ | }
+defined class Singular
+
+scala> val p = new Singular("Planes")
+p: Singular[String] = (Planes)                                     
+
+scala> p foreach println                                          
+ Planes
+
+scala> val name: String = p.head  
+name: String = Planes
+
+More Class Types:
+--------------------
+
+Abstract Classes:
+------------------
+
+An abstract class is a class designed to be extended by other classes but not instantiated itself. 
+Abstract classes provide unimplemented fields and methods by declaring them without defining them.
+
+scala> abstract class Car {
+     |   val year: Int
+     |   val automatic: Boolean = true
+     |   def color: String
+     | }
+defined class Car
+
+scala> new Car()
+<console>:9: error: class Car is abstract; cannot be instantiated
+              new Car()
+
+scala> class RedMini(val year: Int) extends Car {
+     |   def color = "Red"
+     | }
+defined class RedMini
+
+scala> val m: Car = new RedMini(2005)
+m: Car = RedMini@5f5a33ed
+
+scala> class Mini(val year: Int, val color: String) extends Car
+defined class Mini
+
+scala> val redMini: Car = new Mini(2005, "Red")
+redMini: Car = Mini@1f4dd016
+
+scala> println(s"Got a ${redMini.color} Mini")
+Got a Red Mini
+
+Anonymous Classes: (need to explore)
+-------------------	
+
+Overloaded Methods:
+-------------------
+A class may have two or more methods with the same name and return value but with different arrangements of input parameters.
+
+scala> class Printer(msg: String) {
+     |   def print(s: String): Unit = println(s"$msg: $s")
+     |   def print(l: Seq[String]): Unit = print(l.mkString(", "))
+     | }
+defined class Printer
+
+scala> new Printer("Today's Report").print("Foggy" :: "Rainy" :: "Hot" :: Nil)
+Today's Report: Foggy, Rainy, Hot
+
+It is not possible to have two methods with the same name and input parameters, but different return values. 
+
+Apply Methods:
+----------------
+Methods named “apply,” sometimes referred to as a default method or an injector method, can be invoked without the method name.
+
+scala> class Multiplier(factor: Int) {
+     |   def apply(input: Int) = input * factor
+     | }
+defined class Multiplier
+
+scala> val tripleMe = new Multiplier(3)
+tripleMe: Multiplier = Multiplier@339cde4b
+
+scala> val tripled = tripleMe.apply(10)
+tripled: Int = 30
+
+scala> val tripled2 = tripleMe(10)
+tripled2: Int = 30
+
+Lazy Values:
+--------------
+
+Lazy values, however, are only created the first time they are instantiated.
+
+scala> class RandomPoint {
+     |   val x = { println("creating x"); util.Random.nextInt }
+     |   lazy val y = { println("now y"); util.Random.nextInt }
+     | }
+defined class RandomPoint
+
+scala> val p = new RandomPoint()
+creating x
+p: RandomPoint = RandomPoint@6c225adb
+
+scala> println(s"Location is ${p.x}, ${p.y}")
+now y
+Location is 2019268581, -806862774
+
+scala> println(s"Location is ${p.x}, ${p.y}")
+Location is 2019268581, -806862774
+
+Packaging:
+============
+
+Defining the Package for a Scala File:
+--------------------------------------
+package <identifier>
+
+Scala follows the Java standard for package naming, where packages start with the reverse domain of your organization or business 
+and then are further classified with additional names on the path.
+
+$ mkdir -p src/com/oreilly
+
+$ cat > src/com/oreilly/Config.scala
+package com.oreilly
+
+class Config(val baseUrl: String = "http://localhost")
+
+$ scalac src/com/oreilly/Config.scala
+
+$ ls com/oreilly/Config.class
+com/oreilly/Config.class
+
+Accessing Packaged Classes:
+---------------------------
+
+Let’s try this out by accessing the JDK’s Date class, located in the java.util package:
+scala> val d = new java.util.Date
+d: java.util.Date = Wed Jan 22 16:42:04 PDT 2014
+
+A more convenient way to access classes in other packages is to import them into the current namespace. 
+
+Syntax: Importing a Packaged Class:
+------------------------------------
+
+import <package>.<class>
+
+scala> import java.util.Date
+import java.util.Date
+
+scala> val d = new Date
+d: java.util.Date = Wed Jan 22 16:49:17 PDT 2014
+
+an import can be placed anywhere in your code where you might use a statement.
+
+type :reset to reset the session
+
+scala> import java.util
+import java.util
+
+scala> val d = new util.Date
+d: java.util.Date = Wed Jan 2229 06:18:52 PDT 2014
+Our accumulative import worked; we can now access classes in the java.util package using the util package alone.
+
+Let’s use the import-all feature to import all of the mutable collections into our current namespace, 
+and then experiment with the ArrayBuffer and Queue collections in that package:
+
+scala> import collection.mutable._
+import collection.mutable._
+
+scala> val b = new ArrayBuffer[String]
+b: scala.collection.mutable.ArrayBuffer[String] = ArrayBuffer()
+
+scala> b += "Hello"
+res0: b.type = ArrayBuffer(Hello)
+
+scala> val q = new Queue[Int]
+q: scala.collection.mutable.Queue[Int] = Queue()
+
+scala> q.enqueue(3, 4, 5)
+
+scala> val pop = q.dequeue
+pop: Int = 3
+
+scala> println(q)
+Queue(4, 5)
+
+There is a potential downside to importing every class and subpackage from a package. 
+If the package you’re importing has a class name that duplicates one already in your namespace, the class that 
+was already in your namespace will no longer be accessible. As an example, 
+the collection.mutable package has a mutable version of Map with the same name, Map. 
+After importing the entire mutable package, any Map I create would then be mutable. 
+This may be the desired behavior, but in case it isn’t, make sure to check the contents of packages that you mass-import.
+
+An alternative to importing a full package is to use an import group.
+
+scala> import collection.mutable.{Queue,ArrayBuffer}
+import collection.mutable.{Queue, ArrayBuffer}
+
+scala> val q = new Queue[Int]
+q: scala.collection.mutable.Queue[Int] = Queue()
+
+scala> val b = new ArrayBuffer[String]
+b: scala.collection.mutable.ArrayBuffer[String] = ArrayBuffer()
+
+scala> val m = Map(1 -> 2)
+m: scala.collection.immutable.Map[Int,Int] = Map(1 -> 2)
+
+There’s actually a way to add both the immutable and the mutable Map collections to the current namespace without having a conflict. 
+To do this, use an import alias that renames one of the types inside the local namespace. 
+
+import <package>.{<original name>=><alias>}
+
+scala> import collection.mutable.{Map=>MutMap}
+import collection.mutable.{Map=>MutMap}
+
+scala> val m1 = Map(1 -> 2)
+m1: scala.collection.immutable.Map[Int,Int] = Map(1 -> 2)
+
+scala> val m2 = MutMap(2 -> 3)
+m2: scala.collection.mutable.Map[Int,Int] = Map(2 -> 3)
+
+scala> m2.remove(2); println(m2)
+Map()
+
+Privacy Controls:
+--------------------
+
+scala> class User(private var password: String) {
+     |   def update(p: String) {
+     |     println("Modifying the password!")
+     |     password = p
+     |   }
+     |   def validate(p: String) = p == password
+     | }
+defined class User
+
+scala> val u = new User("1234")
+u: User = User@94f6bfb
+
+scala> val isValid= u.validate("4567")
+isValid: Boolean = false
+
+scala> u.update("4567")
+Modifying the password!
+
+scala> val isValid= u.validate("4567")
+isValid: Boolean = true
+
+Privacy Access Modifiers:(need to explore)
+--------------------------
+
+
+Objects:
+===============================
+
+An object is a type of class that can have no more than one instance, known in object-oriented design as a singleton.
+Instead of creating an instance with a new keyword, just access the object directly by name. 
+An object gets automatically instantiated the first time it is accessed in a running JVM, 
+which also means that until it is accessed the first time it won’t get instantiated.
+
+scala> object Hello { println("in Hello"); def hi = "hi" }
+defined object Hello
+
+scala> println(Hello.hi)
+in Hello
+hi
+
+scala> println(Hello.hi)
+hi
+
+scala> object HtmlUtils {
+     |   def removeMarkup(input: String) = {
+     |     input
+     |       .replaceAll("""</?\w[^>]*>""","")
+     |       .replaceAll("<.*>","")
+     |   }
+     | }
+defined object HtmlUtils
+
+scala> val html = "<html><body><h1>Introduction</h1></body></html>"
+html: String = <html><body><h1>Introduction</h1></body></html>
+
+scala> val text = HtmlUtils.removeMarkup(html)
+text: String = Introduction
+
+Traits:
+============
+
+A trait is a kind of class that enables multiple inheritance. 
+Classes, case classes, objects, and (yes) traits can all extend no more than one class but can extend multiple traits at the same time. 
+
+scala> trait HtmlUtils {
+     |   def removeMarkup(input: String) = {
+     |     input
+     |       .replaceAll("""</?\w[^>]*>""","")
+     |       .replaceAll("<.*>","")
+     |   }
+     | }
+defined trait HtmlUtils
+
+scala> class Page(val s: String) extends HtmlUtils {
+     |   def asPlainText = removeMarkup(s)
+     | }
+defined class Page
+
+scala> new Page("<html><body><h1>Introduction</h1></body></html>").asPlainText
+res2: String = Introduction
+
+scala> trait SafeStringUtils {
+     |
+     |   // Returns a trimmed version of the string wrapped in an Option,
+     |   // or None if the trimmed string is empty.
+     |   def trimToNone(s: String): Option[String] = {
+     |     Option(s) map(_.trim) filterNot(_.isEmpty)
+     |   }
+     | }
+defined trait SafeStringUtils
+
+scala> class Page(val s: String) extends SafeStringUtils with HtmlUtils {
+     |   def asPlainText: String = {
+     |     trimToNone(s) map removeMarkup getOrElse "n/a"
+     |   }
+     | }
+defined class Page
+
+scala> new Page("<html><body><h1>Introduction</h1></body></html>").asPlainText
+res3: String = Introduction
+
+scala> new Page("  ").asPlainText
+res4: String = n/a
+
+scala> new Page(null).asPlainText
+res5: String = n/a
+
+ class defined as class D extends A with B with C, where A is a class and B and C are traits, 
+would be reimplemented by the compiler as class D extends C extends B extends A. 
+The rightmost trait is the immediate parent of the class being defined, and either the class or the first trait becomes the last parent class.
+
+
+
+
+
+
+
+
+

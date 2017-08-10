@@ -1,0 +1,52 @@
+start the shell with this command:
+../bin/spark-shell –jars ~/apps/spark-1.2/jars/spark-cassandra-connector-assembly-1.1.1-SNAPSHOT.jar
+
+Stop the default context:
+sc.stop
+
+Import the necessary jar files:
+import com.datastax.spark.connector._, org.apache.spark.SparkContext, org.apache.spark.SparkContext._, org.apache.spark.SparkConf
+
+Make a new SparkConf with the Cassandra connection details:
+val conf = new SparkConf(true).set(“spark.cassandra.connection.host”, “localhost”)
+
+Create a new Spark Context:
+val sc = new SparkContext(conf)
+
+Test that the Spark Connector is working from the Shell:
+=======================================================
+
+Create a keyspace called “test_spark” in Cassandra
+create the table test_spark.test (value int PRIMARY KEY); in the test_spark keycap
+Insert some data (INSERT INTO test_spark (value) VALUES (1);)
+
+From the Spark Shell run the following commands:
+val test_spark_rdd = sc.cassandraTable(“test_spark”, “test”)
+test_spark_rdd.first
+The output should be:
+res1: com.datastax.spark.connector.CassandraRow = CassandraRow{value: 1}
+
+
+
+To read data from Cassandra, you create an RDD from a specific table.  This is very simple:
+val data = sc.cassandraTable(“my_keyspace”, “my_table”)
+This will return an RDD of type Row, where Row is a data type which stores a single row from a table as a map from column name to value.
+
+To make interacting with the data from Cassandra more elegant, it is possible to map the rows directly to a custom type which represents an atomic piece of 
+data from the table.  One way to do this is to create a case class which represents the data from table.  
+For example, if there was a table of movies which consisted of these columns: (id int, title text, genres text).  Then a respective case class would be:
+
+case class Movie(Id: Int, Title: String, Genres: String)
+
+Then to read map the Cassandra table directly to that type you simply call ‘cassandraTable’ and specify the type:
+
+val data = sc.cassandraTable[Movie](“spark_demo”, “movies”)
+
+Writing data to Cassandra is just as simple: on an RDD call the function saveToCassandra and specify the keycap and the table.  
+Make sure that the type of the RDD maps to the Cassandra table.
+data.saveToCassandra(“spark_demo”, “movies”)
+Will save the RDD of type Movie to the movies table in the keyspace spark_demo.
+
+
+
+

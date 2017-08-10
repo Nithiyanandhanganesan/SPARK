@@ -1,0 +1,47 @@
+Lets look at the structure of the SQL query you use:
+
+SELECT
+    ...  -- not aggregated columns  #1
+    ...  -- aggregated columns      #2
+FROM
+    ...                          -- #3
+WHERE
+    ...                          -- #4
+GROUP BY
+    ...                          -- #5
+ORDER BY
+    ...                          -- #6
+As you already suspect:
+
+Filter (...) corresponds to predicates in WHERE clause (#4)
+
+Project ... limits number of columns to those required by an union of (#1 and #2, and #4 / #6 if not present in SELECT)
+
+HiveTableScan corresponds to FROM clause (#3)
+
+Remaining parts can attributed as follows:
+
+#2 from SELECT clause - functions field in TungstenAggregates
+
+GROUP BY clause (#5):
+TungstenExchange / hash partitioning
+key field in TungstenAggregates
+
+#6 - ORDER BY clause.
+Project Tungsten in general describes a set of optimizations used by Spark DataFrames (-sets) including:
+
+explicit memory management with sun.misc.Unsafe. It means "native" (off-heap) memory usage and explicit memory allocation / freeing outside GC management. 
+These conversions correspond to ConvertToUnsafe / ConvertToSafe steps in the execution plan. You can learn some interesting details about unsafe from Understanding 
+sun.misc.Unsafe
+
+code generation - different meta-programming tricks designed to generate code that better optimized during compilation. 
+You can think of it as an internal 
+Spark compiler which does things like rewriting nice functional code into ugly for loops.
+
+You can learn more about Tungsten in general from Project Tungsten: Bringing Apache Spark Closer to Bare Metal. Apache Spark 2.0: Faster, Easier, 
+and Smarter provides some examples of code generation.
+
+TungstenAggregate occurs twice because data is first aggregated locally on each partition, than shuffled, and finally merged. If you are familiar with RDD API 
+this process is roughly equivalent to reduceByKey.
+
+If execution plan is not clear you can also try to convert resulting DataFrame to RDD and analyze output of toDebugString.

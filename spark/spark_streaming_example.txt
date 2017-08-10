@@ -1,0 +1,32 @@
+import org.apache.spark._
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.StreamingContext._ 
+
+val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
+conf.set("spark.driver.allowMultipleContexts","true")
+val ssc = new StreamingContext(conf, Seconds(10))
+
+val lines = ssc.socketTextStream("localhost", 9998)
+val words = lines.flatMap(_.split(" "))
+val pairs = words.map(word => (word, 1))
+val wordCounts = pairs.reduceByKey(_ + _)
+wordCounts.print()
+wordCounts.saveAsTextFiles("file:///root/test/")
+ssc.start()
+
+
+nc -lk 9999
+
+
+jssc: org.apache.spark.streaming.api.java.JavaStreamingContext,
+keyClass: Class[String],valueClass: Class[String],
+keyDecoderClass: Class[kafka.serializer.StringDecoder],
+valueDecoderClass: Class[kafka.serializer.StringDecoder],
+kafkaParams: java.util.Map[String,String],
+topics: java.util.Set[String])org.apache.spark.streaming.api.java.JavaPairInputDStream[String,String] <and>
+  
+
+(ssc: org.apache.spark.streaming.StreamingContext,
+kafkaParams: scala.collection.immutable.Map[String,String],
+topics: scala.collection.immutable.Set[String])(implicit evidence$19: scala.reflect.ClassTag[String], implicit evidence$20: scala.reflect.ClassTag[String], implicit evidence$21: scala.reflect.ClassTag[kafka.serializer.StringDecoder], implicit evidence$22: scala.reflect.ClassTag[kafka.serializer.StringDecoder])org.apache.spark.streaming.dstream.InputDStream[(String, String)]
+ cannot be applied to (org.apache.spark.streaming.StreamingContext, scala.collection.immutable.Map[String,Object], scala.collection.immutable.Set[String])

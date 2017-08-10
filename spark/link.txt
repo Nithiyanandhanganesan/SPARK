@@ -1,0 +1,7 @@
+https://0x0fff.com/spark-architecture-shuffle/
+
+http://spark.apache.org/docs/latest/configuration.html
+
+https://databricks.com/blog/2015/03/30/improvements-to-kafka-integration-of-spark-streaming.html
+
+http://spark.apache.org/docs/latest/streaming-kafka-integration.html

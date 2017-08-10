@@ -1,0 +1,223 @@
+http://www.michael-noll.com/blog/2014/10/01/kafka-spark-streaming-integration-example-tutorial/
+
+A receiver (API, docs) is run within an executor as a long-running task. Each receiver is responsible for exactly one so-called input DStream 
+(e.g. an input stream for reading from Kafka), and each receiver – and thus input DStream – occupies one core/slot.
+
+An input DStream: an input DStream is a special DStream that connects Spark Streaming to external data sources for reading input data. 
+For each external data source (e.g. Kafka) you need one such input DStream implementation. 
+Once Spark Streaming is “connected” to an external data source via such input DStreams, any subsequent DStream transformations will create “normal” DStreams.
+
+
+Read parallelism in Spark Streaming:
+=======================================
+
+Like Kafka, Spark Streaming has the concept of partitions. It is important to understand that Kafka’s per-topic partitions are not correlated 
+to the partitions of RDDs in Spark.
+
+The KafkaInputDStream of Spark Streaming – aka its Kafka “connector” – uses Kafka’s high-level consumer API, which means you have two control 
+knobs in Spark that determine read parallelism for Kafka:
+
+1) The number of input DStreams. Because Spark will run one receiver (= task) per input DStream, this means using multiple input DStreams will parallelize 
+  the read operations across multiple cores and thus, hopefully, across multiple machines and thereby NICs.
+2) The number of consumer threads per input DStream. Here, the same receiver (= task) will run multiple threads. 
+  That is, read operations will happen in parallel but on the same core/machine/NIC.
+
+For practical purposes option 1 is the preferred.
+
+The KafkaInputDStream will store individual messages received from Kafka into so-called blocks. 
+From what I understand, a new block is generated every spark.streaming.blockInterval milliseconds, and each block is turned into a partition of the 
+RDD that will eventually be created by the DStream. If this assumption of mine is true, then the number of partitions in the RDDs created by KafkaInputDStream 
+is determined by batchInterval / spark.streaming.blockInterval, where batchInterval is the time interval at which streaming data will be divided into batches 
+(set via a constructor parameter of StreamingContext). For example, if the batch interval is 2 seconds (default) and the block interval is 200ms (default), 
+your RDD will contain 10 partitions. 
+
+
+
+val ssc: StreamingContext = ??? // ignore for now
+val kafkaParams: Map[String, String] = Map("group.id" -> "terran", /* ignore rest */)
+val numInputDStreams = 5
+val kafkaDStreams = (1 to numInputDStreams).map { _ => KafkaUtils.createStream(...) }
+
+In this example we create five input DStreams, thus spreading the burden of reading from Kafka across five cores 
+
+KafkaUtils.createStream(...) is used to access the stream data. If we want to use exactly once delivery, we have to use kafkaUtils.createdirectStream() method.
+https://spark.apache.org/docs/1.3.1/streaming-kafka-integration.html
+
+
+Receiver-based Approach:
+==========================
+This approach uses a Receiver to receive the data. The Received is implemented using the Kafka high-level consumer API. 
+As with all receivers, the data received from Kafka through a Receiver is stored in Spark executors, and then jobs launched by Spark Streaming processes the data.
+However, under default configuration, this approach can lose data under failures (see receiver reliability. 
+To ensure zero-data loss, you have to additionally enable Write Ahead Logs in Spark Streaming. 
+To ensure zero data loss, enable the Write Ahead Logs (introduced in Spark 1.2). This synchronously saves all the received Kafka data into write ahead 
+logs on a distributed file system (e.g HDFS), so that all the data can be recovered on failure. 
+See Deploying section in the streaming programming guide for more details on Write Ahead Logs.
+
+val kafkaStream = KafkaUtils.createStream(streamingContext, [ZK quorum], [consumer group id], [per-topic number of Kafka partitions to consume])
+
+Direct Approach (No Receivers):
+=================================
+This is a new receiver-less “direct” approach has been introduced in Spark 1.3 to ensure stronger end-to-end guarantees. 
+Instead of using receivers to receive data, this approach periodically queries Kafka for the latest offsets in each topic+partition,
+and accordingly defines the offset ranges to process in each batch. 
+
+Simplified Parallelism: No need to create multiple input Kafka streams and union-ing them. 
+With directStream, Spark Streaming will create as many RDD partitions as there is Kafka partitions to consume, which will all read data from Kafka in parallel. 
+So there is one-to-one mapping between Kafka and RDD partitions, which is easier to understand and tune.
+
+Efficiency: Achieving zero-data loss in the first approach required the data to be stored in a Write Ahead Log, which further replicated the data. 
+This is actually inefficient as the data effectively gets replicated twice - once by Kafka, and a second time by the Write Ahead Log. 
+This second approach eliminate the problem as there is no receiver, and hence no need for Write Ahead Logs.
+
+Exactly-once semantics: The first approach uses Kafka’s high level API to store consumed offsets in Zookeeper. 
+This is traditionally the way to consume data from Kafka. While this approach (in combination with write ahead logs) can ensure zero data loss 
+(i.e. at-least once semantics), there is a small chance some records may get consumed twice under some failures. 
+This occurs because of inconsistencies between data reliably received by Spark Streaming and offsets tracked by Zookeeper. 
+Hence, in this second approach, we use simple Kafka API that does not use Zookeeper and offsets tracked only by Spark Streaming within its checkpoints.
+
+ val directKafkaStream = KafkaUtils.createDirectStream[
+     [key class], [value class], [key decoder class], [value decoder class] ](
+     streamingContext, [map of Kafka parameters], [set of topics to consume])
+
+
+Example:
+============
+
+ 
+import _root_.kafka.serializer.DefaultDecoder
+import _root_.kafka.serializer.StringDecoder
+import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming._
+ 
+// prevent INFO logging from pollution output
+sc.setLogLevel("ERROR")
+ 
+// creating the StreamingContext with 5 seconds interval
+val ssc = new StreamingContext(sc, Seconds(5))
+ 
+val kafkaConf = Map(
+    "metadata.broker.list" -> "node1.hdp:6667",
+    "zookeeper.connect" -> "node1.hdp:2181",
+    "group.id" -> "kafka-streaming-example",
+    "zookeeper.connection.timeout.ms" -> "1000"
+)
+ 
+val lines = KafkaUtils.createStream[Array[Byte], String, DefaultDecoder, StringDecoder](
+    ssc,
+    kafkaConf,
+    Map("spark-test-topic" -> 1),   // subscripe to topic and partition 1
+    StorageLevel.MEMORY_ONLY
+)
+ 
+val words = lines.flatMap{ case(x, y) => y.split(" ")}
+ 
+words.print()
+ 
+ssc.start()
+
+
+
+Example 2:
+===========
+
+import java.util.HashMap
+
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, Produc-erRecord}
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.kafka._
+
+object KafkaWordCount {
+   def main(args: Array[String]) {
+      if (args.length < 4) {
+         System.err.println("Usage: KafkaWordCount <zkQuorum><group> <topics> <numThreads>")
+         System.exit(1)
+      }
+
+      val Array(zkQuorum, group, topics, numThreads) = args
+      val sparkConf = new SparkConf().setAppName("KafkaWordCount")
+      val ssc = new StreamingContext(sparkConf, Seconds(2))
+      ssc.checkpoint("checkpoint")
+
+      val topicMap = topics.split(",").map((_, numThreads.toInt)).toMap
+      val lines = KafkaUtils.createStream(ssc, zkQuorum, group, topicMap).map(_._2)
+      val words = lines.flatMap(_.split(" "))
+      val wordCounts = words.map(x => (x, 1L))
+         .reduceByKeyAndWindow(_ + _, _ - _, Minutes(10), Seconds(2), 2)
+      wordCounts.print()
+
+      ssc.start()
+      ssc.awaitTermination()
+   }
+}
+
+
+
+Example 3:
+===============
+
+import org.apache.spark._
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.StreamingContext._ 
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.spark.streaming.kafka._
+import org.apache.spark.streaming._
+import _root_.kafka.serializer.StringDecoder
+
+import org.apache.spark.streaming.kafka010._
+import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
+import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
+
+val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
+conf.set("spark.driver.allowMultipleContexts","true")
+val ssc = new StreamingContext(conf, Seconds(5))
+
+
+val kafkaParams = Map[String, Object](
+  "bootstrap.servers" -> "localhost:9092",
+  "key.deserializer" -> classOf[StringDeserializer],
+  "value.deserializer" -> classOf[StringDeserializer],
+  "group.id" -> "kafka-streaming-example",
+  "auto.offset.reset" -> "latest",
+  "enable.auto.commit" -> (false: java.lang.Boolean)
+)
+
+val topics = Array("test_kafka")
+val stream = KafkaUtils.createDirectStream[String, String, DefaultDecoder, StringDecoder](
+  ssc,
+  kafkaParams
+  topics
+)
+
+stream.map(record => (record.key, record.value))
+
+val stream = KafkaUtils.createDirectStream[String, String](
+  ssc,
+  PreferConsistent,
+  Subscribe[String, String](topics, kafkaParams)
+)
+ 
+val words = lines.flatMap{ case(x, y) => y.split(" ")}
+ 
+words.print()
+
+==========================
+
+import kafka.serializer.StringDecoder
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.kafka._
+import org.apache.spark.SparkConf
+
+val brokers="localhost:9092"
+val topics="kafka_test"
+
+val sparkConf = new SparkConf().setAppName("DirectKafkaWordCount")
+sparkConf.set("spark.driver.allowMultipleContexts","true")
+val ssc =  new StreamingContext(sparkConf, Seconds(2))
+
+val topicsSet = topics.split(",").toSet
+val kafkaParams = Map[String, String]("metadata.broker.list" -> brokers)
+val messages = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topicsSet)
