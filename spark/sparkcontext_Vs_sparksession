@@ -1,0 +1,63 @@
+In previous versions of Spark, we had to create a SparkConf and SparkContext to interact with Spark, as shown here:
+
+//set up the spark configuration and create contexts
+val sparkConf = new SparkConf().setAppName("SparkSessionZipsExample").setMaster("local")
+// your handle to SparkContext to access other context like SQLContext
+val sc = new SparkContext(sparkConf).set("spark.some.config.option", "some-value")
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
+
+Whereas in Spark 2.0 the same effects can be achieved through SparkSession, without expliciting creating SparkConf, SparkContext or SQLContext,
+as they’re encapsulated within the SparkSession. Using a builder design pattern, it instantiates a SparkSession object if one does not already exist,
+along with its associated underlying contexts.
+
+// Create a SparkSession. No need to create SparkContext
+// You automatically get it as part of the SparkSession
+val warehouseLocation = "file:${system:user.dir}/spark-warehouse"
+val spark = SparkSession
+   .builder()
+   .appName("SparkSessionZipsExample")
+   .config("spark.sql.warehouse.dir", warehouseLocation)
+   .enableHiveSupport()
+   .getOrCreate()
+
+
+At this point you can use the spark variable as your instance object to access its public methods and instances for the duration of your Spark job.
+
+Configuring Spark’s Runtime Properties:
+
+//set new runtime options
+spark.conf.set("spark.sql.shuffle.partitions", 6)
+spark.conf.set("spark.executor.memory", "2g")
+//get all settings
+val configMap:Map[String, String] = spark.conf.getAll()
+
+
+Dataframe and datasets:
+=========================
+
+//create a Dataset using spark.range starting from 5 to 100, with increments of 5
+val numDS = spark.range(5, 100, 5)
+// reverse the order and display first 5 items
+numDS.orderBy(desc("id")).show(5)
+//compute descriptive stats and display them
+numDs.describe().show()
+// create a DataFrame using spark.createDataFrame from a List or Seq
+val langPercentDF = spark.createDataFrame(List(("Scala", 35), ("Python", 30), ("R", 15), ("Java", 20)))
+//rename the columns
+val lpDF = langPercentDF.withColumnRenamed("_1", "language").withColumnRenamed("_2", "percent")
+//order the DataFrame in descending order of percentage
+lpDF.orderBy(desc("percent")).show(false)
+
+
+Reading JSON Data :
+=====================
+
+val zipsDF = spark.read.json(jsonFile)
+
+
+Using Spark SQL:
+====================
+
+val resultsDF = spark.sql("SELECT city, pop, state, zip FROM zips_table")
+resultsDF.show(10)
