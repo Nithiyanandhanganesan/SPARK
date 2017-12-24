@@ -1,0 +1,86 @@
+%scala
+//=============================Load files/tables into dataframe=========================================
+//Read Json, TextFile, Table into Dataframe
+//Load CSV file with header and comma delimited
+scala> var df=spark.read.option("header", true).option("delimiter", ",").csv("file:///Downloads/test_file.csv")
+df: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
+
+//Load the same CSV file with load option.
+scala> var df=spark.read.format("csv").option("header", true).option("delimiter", ",").load("file:///Downloads/test_file.csv")
+df: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
+
+//Load JSON file into Dataframe
+scala> val df=spark.read.json("file:///test.json")
+df: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
+
+//Load table into Dataframe
+scala> val op=sqlContext.sql("select * from schema.table limit 5")
+op: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
+
+
+%scala
+//=============================Write dataframe into files/tables =========================================
+//Write Dataframe into CSV file with header and pipe delimited
+scala> import org.apache.spark.sql.SaveMode
+scala> df.write.mode(SaveMode.Overwrite).option("delimiter","|").format("csv").save("file:///Downloads/test_file1.csv")
+
+//Write Dataframe into JSON file
+scala> df.write.mode(SaveMode.Overwrite).format("json").save("file:///Downloads/test_file2")
+
+//Write DAtaframe to file with compression
+scala> df.write.mode(SaveMode.Overwrite).format("json").codec("gzip").save("file:///Downloads/test_file3")
+
+//Write dataframe to file in parquet.
+scala> df.write.mode(SaveMode.Overwrite).option("delimiter","|").format("csv").parquet("file:///Downloads/test_file4")
+
+
+%scala
+//=============================Convert RDD to Dataframe using ==============================================
+//Using CASE CLASS 
+case class My_Schema (x:Int,y: Double,z:String,t:String)
+val input=sc.textFile("file:///rdd_df_conversion")
+val input1=input.map(x=>x.split(","))
+val input1RDD = input1.map ( x=> My_Schema (x(0).toInt, x(1).toDouble, x(2).toString(),x(3).toString))
+val inputDF=input1RDD.toDF()
+
+//Using STRUCTFIELD
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.{StructType, StructField, StringType,IntegerType,DoubleType};
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
+val My_Schema1 = new StructType(Array(
+  StructField("x",IntegerType,nullable = true),
+  StructField("y",DoubleType,nullable = true),
+  StructField("z",StringType,nullable=true),
+  StructField("t",StringType,nullable=true)
+))
+
+scala> val rowRDD = input.map(x=>x.split(",")).map(x ⇒ Row(x(0).trim.toInt, x(1).toDouble, x(2).toString(),x(3).toString()))
+rowRDD: org.apache.spark.rdd.RDD[org.apache.spark.sql.Row] = MapPartitionsRDD[174] at map at <console>:29
+
+scala> val inputDF = sqlContext.createDataFrame(rowRDD,My_Schema1)
+inputDF: org.apache.spark.sql.DataFrame = [x: int, y: double ... 2 more fields]
+
+
+%scala
+//=============================Useful Dataframe Operations ==============================================
+//Change column order in Dataframe
+scala> val newinputDF=inputDF.select("y","x","t","z")
+newinputDF: org.apache.spark.sql.DataFrame = [y: double, x: int ... 2 more fields]
+
+scala> newinputDF.printSchema() 
+root
+ |-- y: double (nullable = true)
+ |-- x: integer (nullable = true)
+ |-- t: string (nullable = true)
+ |-- z: string (nullable = true)
+
+//Change datatype of required columns columns. Though the order is different in below command final DF will not change the structure.
+
+var newinputDF1=inputDF.withColumn("z", 'z.cast(StringType)).withColumn("x", 'x.cast(DoubleType)).withColumn("y", 'y.cast(StringType))
+newinputDF1: org.apache.spark.sql.DataFrame = [x: double, y: string ... 2 more fields]
+
+//Add columns to the dataframe. lit will add constant value to all the rows in dataframe
+import org.apache.spark.sql.functions._
+inputDF.withColumn("D", lit(750))
+
