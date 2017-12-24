@@ -1,0 +1,366 @@
+//Usefule links to learn spark
+http://apachesparkbook.blogspot.com/2015/11/mappartition-example.html
+http://homepage.cs.latrobe.edu.au/zhe/ZhenHeSparkRDDAPIExamples.html
+
+%scala
+//read text file into scala RDD and will return input: org.apache.spark.rdd.RDD[String]
+val input=sc.textFile("Filepath")
+input: org.apache.spark.rdd.RDD[String] 
+//Create RDD directly from List.
+val input = sc.parallelize(List("abe", "abby", "apple"))
+
+scala> val num_ex = sc.parallelize(List(34,1,2,3,4,5,6,7,8,9))
+num_ex: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[64] at parallelize at <console>:24
+
+//Display all values
+input.collect()
+//Return first value as string
+input.first()
+//Return n number of value entered in brackets based on default sorting order
+input.top(4)
+//Always Return first n elements in RDD
+input.take(4)
+//Return n number of elements in RDD. Result may vary each time.
+input.takeSample(true,3)
+//return count of elements(line)
+input.count()
+//sortby
+val num_ex = sc.parallelize(List(34,1,2,3,4,5,6,7,8,9))
+scala> num_ex.sortBy(x=>x,true).collect()
+res15: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 34)
+scala> num_ex.sortBy(x=>x,false).collect()
+res16: Array[Int] = Array(34, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+
+scala> val z = sc.parallelize(Array(("H", 10), ("A", 26), ("Z", 1), ("L", 5)))
+z: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[17] at parallelize at <console>:24
+scala> z.sortBy(c => c._1, true).collect
+res17: Array[(String, Int)] = Array((A,26), (H,10), (L,5), (Z,1))               
+scala> z.sortBy(c => c._2, true).collect
+res18: Array[(String, Int)] = Array((Z,1), (L,5), (H,10), (A,26))
+
+
+//===============MAP,FLATMAP,FILTER,SAVEASTEXTFILE,PAIR_RDD========================
+//map function will convert each element(line) into separate value 
+//"input" array Array[String] = Array(hi hello good, hello hi, good bad, bad worst)
+//Return value from "input1" Array[Array[String]] = Array(Array(hi, hello, good), Array(hello, hi), Array(good, bad), Array(bad), Array(good))
+val input1=input.map(x=>x.split(" "))
+//Select particular value from RDD
+input1.map(x=>x(0))
+//Select multiple values as normal RDD Array[(String, String, String)] = Array((hi,hello,hello), (hello,hi,hi), (good,bad,bad), (bad,worst,worst))
+input1.map(x=>(x(0),x(1),x(1)))
+//Create pair rdd from normal RDD Array[(String, (String, String))] = Array((hi,(hello,hello)), (hello,(hi,hi)), (good,(bad,bad)), (bad,(worst,worst)))
+input1.map(x=>( (x(0)) , (x(1),x(1)) ))
+//FILTER operation on numeric.
+num_ex.filter(x=>((x==2) || (x==3)))
+//Filter opeartion on string
+input1.filter(x=>((x.contains("hi")) & (x.contains("hello")))).collect()
+input1.filter(x=>((x(0).contains("hi")) || (x(0).contains("hello"))))
+//Flatmap
+ input.flatMap(x=>x.split(" "))
+//Write the RDD to a file in tab separated format
+input1.map(x=>x.mkString("\t")).saveAsTextFile("file:////Users/nwe.nganesan/test_query/test1")
+input1.map(x=>x.mkString("\t")).saveAsObjectFile("file:////Users/nwe.nganesan/test_query/test2")
+
+
+//====================MAP VS MAPPARTITIONS VS MAPPARTITIONSINDEX===============================
+//"map" converts each element of the source RDD into a single element of the result RDD by applying a function. 
+//"mapPartitions" converts each partition of the source RDD into multiple elements of the result (possibly none).
+//The main advantage of mapPartitions is, we can do initialization on Per-Partition basis instead of per-element basis.
+val data = sc.parallelize(List(1,2,3,4,5,6,7,8), 2)
+
+
+def sumfuncmap(numbers : Int) : Int =
+{
+  var sum = 1
+  return sum + numbers
+}
+
+data.map(sumfuncmap).collect
+
+//returns Array[Int] = Array(2, 3, 4, 5, 6, 7, 8, 9)  
+
+//=======================================================================
+
+def sumfuncpartition(numbers : Iterator[Int]) : Iterator[Int] =
+{
+  var sum = 1
+  while(numbers.hasNext)
+  {
+    sum = sum + numbers.next()
+  }
+  return Iterator(sum)
+}
+
+data.mapPartitions(sumfuncpartition).collect
+//returns Array[Int] = Array(11, 27)         // Applied to each and every element partition-wise
+
+//==========================================================================
+//Similar to mapPartitions, but also provides a function with an Int value to indicate the index position of the partition.
+def sumfuncpartitionwithindex(index:Int ,numbers : Iterator[Int]) : Iterator[Int] =
+{
+  var sum = 1
+  while(numbers.hasNext)
+  {
+    sum = sum + numbers.next() + index
+  }
+  return Iterator(sum)
+}
+
+data.mapPartitionsWithIndex(sumfuncpartitionwithindex).collect
+//returns res3: Array[Int] = Array(11, 31)
+
+//===============RDD Partitions=================================================
+val z = sc.parallelize(100 to 120, 5)
+//getting number of partitions in RDD
+z.getNumPartitions
+z.partitions.size
+z.partitions.length
+//Decrease the number of partitions. Coalesce will not shuffle if we decrease the no. of partitions
+scala> val z1=z.coalesce(3)
+z1: org.apache.spark.rdd.RDD[Int] = CoalescedRDD[59] at coalesce at <console>:26
+scala> z1.getNumPartitions
+res60: Int = 3
+
+//Repartitions is used to increase the no. of partitions to increase parallelism. It involves shuffle.
+scala> val z1=z.repartition(10)
+z1: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[63] at repartition at <console>:26
+scala> z1.getNumPartitions
+res61: Int = 10
+
+//==================RDD Memory Operations=======================================
+//Return whether RDD is cached or not
+scala> input.getStorageLevel.useMemory
+res61: Boolean = false
+//Cache the RDD into memory. By default cache() will load RDD into in-memory
+scala> input.cache()
+//Return whether RDD is cached or not
+scala> input.getStorageLevel.useMemory
+res64: Boolean = true
+//Unpersist the cached RDD
+input.unpersist()
+//Using persist we can cache RDD into different storage [MEMORY_ONLY,MEMORY_AND_DISK,MEMORY_ONLY_SER,MEMORY_AND_DISK_SER,DISK_ONLY,MEMORY_ONLY_2(replicate the RDD twice in memory)]
+input.persist(MEMORY_ONLY)
+//===============================ZIP, ZIP PARTITION, ZIPPARTITIONSWITHINDEX RDD===============================
+//zip aggregates the contents of two lists into a single list of pairs.
+scala>  List(1, 2, 3).zip(List("a", "b", "c","e"))
+res27: List[(Int, String)] = List((1,a), (2,b), (3,c))
+
+//both RDDs have the same number of partitions
+//respective partitions in those RDDs have exactly the same size
+val a = sc.parallelize(1 to 9, 3)
+val b = sc.parallelize(11 to 19, 3)
+val c = sc.parallelize(21 to 29, 3)
+
+scala> a.zip(b).collect
+res39: Array[(Int, Int)] = Array((1,11), (2,12), (3,13), (4,14), (5,15), (6,16), (7,17), (8,18), (9,19))
+
+scala> a.zip(b).zip(c).collect()
+res41: Array[((Int, Int), Int)] = Array(((1,11),21), ((2,12),22), ((3,13),23), ((4,14),24), ((5,15),25), ((6,16),26), ((7,17),27), ((8,18),28), ((9,19),29))
+
+scala> a.zip(b).zip(c).map((x) => (x._1._1, x._1._2, x._2 )).collect
+res42: Array[(Int, Int, Int)] = Array((1,11,21), (2,12,22), (3,13,23), (4,14,24), (5,15,25), (6,16,26), (7,17,27), (8,18,28), (9,19,29))
+
+//zipParititions is similar to zip but it will zip it at partition level
+def myfunc(aiter: Iterator[Int], biter: Iterator[Int], citer: Iterator[Int]): Iterator[String] =
+{
+  var res = List[String]()
+  while (aiter.hasNext && biter.hasNext && citer.hasNext)
+  {
+    val x = aiter.next + " " + biter.next + " " + citer.next
+    res ::= x
+  }
+  res.iterator
+}
+a.zipPartitions(b, c)(myfunc).collect
+
+//"zipWithIndex" Zips the elements of the RDD with its element indexes. The indexes start from 0. 
+
+val z = sc.parallelize(Array("A", "B", "C", "D"))
+val r = z.zipWithIndex
+res110: Array[(String, Long)] = Array((A,0), (B,1), (C,2), (D,3))
+
+val z = sc.parallelize(100 to 120, 5)
+val r = z.zipWithIndex
+r.collect
+res11: Array[(Int, Long)] = Array((100,0), (101,1), (102,2), (103,3), (104,4), (105,5), (106,6), (107,7), (108,8), (109,9), (110,10), (111,11), (112,12), (113,13), (114,14), (115,15), (116,16), (117,17), (118,18), (119,19), (120,20))
+
+//zipWithUniqueId :This is different from zipWithIndex since just gives a unique id to each data element but the ids may not match the index number of the data element.
+
+val z = sc.parallelize(100 to 120, 5)
+val r = z.zipWithUniqueId
+r.collect
+
+res12: Array[(Int, Long)] = Array((100,0), (101,5), (102,10), (103,15), (104,1), (105,6), (106,11), (107,16), (108,2), (109,7), (110,12), (111,17), (112,3), (113,8), (114,13), (115,18), (116,4), (117,9), (118,14), (119,19), (120,24))
+
+
+//===============================Aggregations Normal RDD====================================
+scala> input1.collect()
+res91: Array[Array[String]] = Array(Array(hi, hello, good), Array(hello, hi), Array(good, bad), Array(bad, worst), Array(good, hwllo))
+//groupBy [ result in string object]
+scala> input1.groupBy(x=>x(0).charAt(0)).foreach(println)
+(b,CompactBuffer([Ljava.lang.String;@493b5b13))
+(g,CompactBuffer([Ljava.lang.String;@3d17a124, [Ljava.lang.String;@235a766a))
+(h,CompactBuffer([Ljava.lang.String;@3bdda6cb, [Ljava.lang.String;@b6888cb))
+//groupBy [ result in actual string value]
+scala> input1.groupBy(x=>x(0).charAt(0)).foreach{case (a,b) => println(a + ": " + b.map(_.mkString(" "))) }
+b: List(bad worst)
+h: List(hi hello good, hello hi)
+g: List(good bad, good hwllo)
+
+//reduce
+scala> input.flatMap(x=>x.split(" ")).map(x=>x.size).reduce((x,y)=>x+y)
+res102: Int = 42
+
+
+//===============================Iterating RDD(foreach)====================================
+scala> var foreachTest=input.map(x=>x.split(" "))
+res103: Array[Array[String]] = Array(Array(hi, hello, good), Array(hello, hi), Array(good, bad), Array(bad, worst), Array(good, hwllo))
+
+//foreach
+scala> foreachTest.foreach({println})
+[Ljava.lang.String;@54105f7
+[Ljava.lang.String;@6b512c7a
+[Ljava.lang.String;@2170b5cb
+
+//Iterate the each elements in RDD
+scala> foreachTest.foreach(x=>{
+  temp=x(0) + temp
+  println(temp)
+})
+
+hi
+hellohi
+goodhellohi
+badgoodhellohi
+goodbadgoodhellohi
+
+//Iterate each element and also inside elements
+scala> foreachTest.foreach(x=>{
+  var temp=""
+  x.foreach(y=>{
+    temp=temp + y
+  })
+  println(temp)
+})
+
+hihellogood
+hellohi
+goodbad
+badworst
+goodhwllo
+  
+//Iterate each element and also inside elements with numeric operations
+scala> foreachTest.foreach(x=>{
+  var temp=0
+  x.foreach(y=>{
+    temp=y.length + temp
+  })
+  println(temp)
+})
+
+11
+7
+7
+8
+9
+
+//foreachPartitions. Result will be same as foreach but it will do it on partitions basis not on element basis.
+val foreachTest1=foreachTest.repartition(2)
+scala> foreachTest1.foreach(x=>{
+  var temp=0
+  x.foreach(y=>{
+    temp=y.length + temp
+  })
+  println(temp)
+})
+
+11
+7
+7
+8
+9
+  
+//Iterator
+//Returns a compatible iterator object for a partition of this RDD. This function should never be called directly.
+
+
+//===============================Iterating RDD(foreach)====================================
+import sqlContext.implicits._
+val schema="wrs_src_tdm"
+val a=sqlContext.sql(s"use ${schema}")
+val x=sqlContext.sql("show tables ")
+//val x=sqlContext.sql("select count(*) from wrs_src_tdm.appnexus_impressions")
+val tableList=x.select("tableName").rdd
+//tableList.foreach(println(""))
+tableList.collect().foreach(x=>{
+  var test=x(0)
+ var row_count=sqlContext.sql(s"select count(*) as row_count from ${schema}.${test}").first()
+//   var row_count=sqlContext.sql(s"select count(*) as row_count from anand.${test}").first()
+   var column_list=sqlContext.sql(s"desc ${schema}.${test}")
+   var party_id_count:String=""
+   column_list.collect().foreach(a=>{
+     if (a(0)=="party_id")
+     {
+       var dist_party_id=sqlContext.sql(s"select distinct party_id from ${schema}.${test}").first()
+       var party_id_count=dist_party_id(0).toString()
+     }
+    } )
+      if (party_id_count=="")
+      {
+        party_id_count=s"NO party_id column exist in ${test} table"
+      }
+//    val output:List[String,String,String]=sc.parallelize(List(test,row_count,party_id_count))
+//    case class OutputSchema (tableName:String, Row_count: String, Party_id_count:String)
+//    val outputdf=output.map(p=>OutputSchema(p(0),p(1).to,p(2))).toDF()
+//    outputdf.show()
+ println("Table Name: " +test + " ,Row count:" + row_count + " ,Party_id count: " + party_id_count)
+ 
+  })
+  
+  
+  Fo//===============================Useful commands====================================
+//set name to the RDD
+//name your RDD's using the RDD.setName() method. This will make them more recognizable in the Storage tab.
+input.setName("test")
+//get name of the RDD if set else NULL
+scala> input.name
+res64: String = test
+//print RDD lineage graph
+input.toDebugString
+//return unique id of the RDD
+scala> input.id
+res52: Int = 1
+
+
+//===============================Rarely used commands==============================
+//creation of tuple
+scala> val tuple = ("Mike", 40, "New York")
+tuple: (String, Int, String) = (Mike,40,New York)
+//find number of elements in tuple
+scala> tuple.productArity
+res21: Int = 3
+//productElement return the value in tuple. Also used to iterate the tuple.
+scala> val t = (1, 2, 3)
+t: (Int, Int, Int) = (1,2,3)
+scala> t.productElement(0) == t._1
+res81: Boolean = true
+//productIterator is used to iterate through tuple
+ val t = (4,3,2,1)
+ t.productIterator.foreach{ i =>println("Value = " + i )}
+//Count() - Returns you the number of elements in an RDD.
+//CountApprox - Approximate version of count() that returns a potentially incomplete result within a timeout, even if not all tasks have finished.
+//countApprox(timeout: Long, confidence: Double)
+scala> input.countApprox(800,0.95)
+res62: org.apache.spark.partial.PartialResult[org.apache.spark.partial.BoundedDouble] = (final: [5.000, 5.000])
+//Sampling of RDD
+a.sample(false, 0.2).take(1000)
+//When you use collect every partition is moved from the remote cluster to the driver machine at the same time. 
+//This means if you use collect you can never write a file larger than driver heap.
+//toLocalIterator lets us get around this by only pulling down a single Spark partition’s worth of data to the DRiver at a time. 
+//This means that you can write as large a file as HDD space you have as long as no one Spark Partition is bigger than the driver heap.
+scala> val pw = new PrintWriter(new File("LocalText"))
+pw: java.io.PrintWriter = java.io.PrintWriter@5879197
+scala> val rdd = sc.parallelize(1 to 100000).map( num => s"$num::Line")
+scala> for (line <- rdd.toLocalIterator) { pw.println(line) }
+
+
