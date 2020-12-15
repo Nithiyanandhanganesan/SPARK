@@ -6,19 +6,21 @@ LOCALITY LEVEL SUMMARY:
 --------------------------------
 
 
-The locality level  type of access to data has been performed. When a node finishes all its work and its CPU become idle, Spark may decide to start other pending task that require obtaining data from other places. So ideally, all your tasks should be process local as it is associated with lower data access latency.
+The locality level  type of access to data has been performed. When a node finishes all its work and its CPU become idle, Spark may decide
+to start other pending task that require obtaining data from other places. So ideally, all your tasks should be process local as it is associated with
+lower data access latency.
 
 You can configure the wait time before moving to other locality levels using:
 
 spark.locality.wait
 More information about the parameters can be found in the Spark Configuration docs
 
-With respect to the different levels PROCESS_LOCAL, NODE_LOCAL, RACK_LOCAL, or ANY I think the methods findTask and findSpeculativeTask 
-in org.apache.spark.scheduler.TaskSetManager illustrate how Spark chooses tasks based on their locality level. 
+With respect to the different levels PROCESS_LOCAL, NODE_LOCAL, RACK_LOCAL, or ANY I think the methods findTask and findSpeculativeTask
+in org.apache.spark.scheduler.TaskSetManager illustrate how Spark chooses tasks based on their locality level.
 
-It first will check for PROCESS_LOCAL tasks which are going to be launched in the same executor process. 
-If not, it will check for NODE_LOCAL tasks that may be in other executors in the same node or it need to be retrieved from systems like HDFS, cached, etc. 
-RACK_LOCAL means that data is in another node and therefore it need to be transferred prior execution. 
+It first will check for PROCESS_LOCAL tasks which are going to be launched in the same executor process.
+If not, it will check for NODE_LOCAL tasks that may be in other executors in the same node or it need to be retrieved from systems like HDFS, cached, etc.
+RACK_LOCAL means that data is in another node and therefore it need to be transferred prior execution.
 And finally, ANY is just to take any pending task that may run in the current node.
 
 
@@ -33,10 +35,8 @@ SHUFFLE WRITE:
 ----------------------
 
 
-Shuffling means the reallocation of data between multiple Spark stages. "Shuffle Write" is the sum of all written serialized data on all executors 
+Shuffling means the reallocation of data between multiple Spark stages. "Shuffle Write" is the sum of all written serialized data on all executors
 before transmitting (normally at the end of a stage) and "Shuffle Read" means the sum of read serialized data on all executors at the beginning of a stage.
 
-Your programm has only one stage, triggered by the "collect" operation. No shuffling is required, because you have only a bunch of consecutive 
+Your program has only one stage, triggered by the "collect" operation. No shuffling is required, because you have only a bunch of consecutive
 map operations which are pipelined in one Stage.
-
-

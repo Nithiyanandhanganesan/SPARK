@@ -17,6 +17,9 @@ df: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
 scala> val op=sqlContext.sql("select * from schema.table limit 5")
 op: org.apache.spark.sql.DataFrame = [x: string, y: string ... 36 more fields]
 
+//Read the Hive table
+spark.read.table("default.test")
+
 
 %scala
 //=============================Write dataframe into files/tables =========================================
@@ -33,10 +36,20 @@ scala> df.write.mode(SaveMode.Overwrite).format("json").codec("gzip").save("file
 //Write dataframe to file in parquet.
 scala> df.write.mode(SaveMode.Overwrite).option("delimiter","|").format("csv").parquet("file:///Downloads/test_file4")
 
+//Write output to single files
+scala> df.coalesce(1).write.option("header",true).csv("file:///path.csv")
+
+//Rename the file in hdfs
+import org.apache.hadoop.fs._
+val fs=FileSystem.get(spark.sparkContext.hadoopConfiguration)
+val file= fs.globStatus(new Path("outputpath/part*")")(0).getPath().getName()   --> get the filename
+fs.rename(new Path("path/" + file),new Path("newfilepath/file.csv"))
+
+
 
 %scala
 //=============================Convert RDD to Dataframe using ==============================================
-//Using CASE CLASS 
+//Using CASE CLASS
 case class My_Schema (x:Int,y: Double,z:String,t:String)
 val input=sc.textFile("file:///rdd_df_conversion")
 val input1=input.map(x=>x.split(","))
@@ -64,23 +77,68 @@ inputDF: org.apache.spark.sql.DataFrame = [x: int, y: double ... 2 more fields]
 
 %scala
 //=============================Useful Dataframe Operations ==============================================
-//Change column order in Dataframe
-scala> val newinputDF=inputDF.select("y","x","t","z")
-newinputDF: org.apache.spark.sql.DataFrame = [y: double, x: int ... 2 more fields]
+//Create empty DF
+val emptyDF = SparkSession.builder.getOrCreate.emptyDataFrame
+val emptyDF = spark.emptyDataFrame
 
-scala> newinputDF.printSchema() 
-root
- |-- y: double (nullable = true)
- |-- x: integer (nullable = true)
- |-- t: string (nullable = true)
- |-- z: string (nullable = true)
+//Change column order in Dataframe
+ val newinputDF=inputDF.select("y","x","t","z")
+ val cols = df1.columns
+ val dforder = df.select(cols.head,cols.tail:_*)
+ val reordercol:Array[String]=Array("col3","col2","col1")
+ df.select(reordercol.head,reordercol.tail:_*)
+
+
+
+//Print the schema of the dataframe
+scala> newinputDF.printSchema()
 
 //Change datatype of required columns columns. Though the order is different in below command final DF will not change the structure.
-
-var newinputDF1=inputDF.withColumn("z", 'z.cast(StringType)).withColumn("x", 'x.cast(DoubleType)).withColumn("y", 'y.cast(StringType))
-newinputDF1: org.apache.spark.sql.DataFrame = [x: double, y: string ... 2 more fields]
+var newinputDF1=inputDF.withColumn("z", 'z.cast(StringType))
+var newinputDF1=inputDF.withColumn("z",$"z".cast(StringType))
 
 //Add columns to the dataframe. lit will add constant value to all the rows in dataframe
 import org.apache.spark.sql.functions._
 inputDF.withColumn("D", lit(750))
+inputDF.withColumn("D", lit(""))   -> create the empty columns in DF
 
+//Rename the columns in DataFrame
+val df = testdf.withColumnRenamed("oldcolumnsname","newcolumnsname")
+
+//number of records in DF
+df.count()
+
+//filter
+df.filter("store_nbr is not null")
+
+//remove other than alpha numeric in newcolumnsname
+df.withColumn("test",functions.regexp_replace(df.col("test"),"[^A-Za-z0-9]",""))
+
+//Group By & aggregation
+df.groupBy("col1","col2").agg(count($"col3").alias("itemcount"))
+
+//Pivot SUM
+df.groupby("Footage").pivot("CLUSTER").sum("itemcount")
+
+//Order By
+df.orderBy("col1")
+
+//Windowing functions
+val partByCluster = Window.partitionBy($"CLUSTER").orderBy($"Footage").desc
+val actstrcnt = sum("strcnt").over(partByCluster).as('cumulative_total)
+val actstrcntcumlativesum = df.select('*,actstrcnt).orderBy('Cluster,'Footage.desc)
+
+//Fill empty with 0
+df.na.fill(0)
+
+//Cumulative SUM
+df.withColumn("Cumulativesum",df.map(c => col(c)).reduce((c1,c2) => c1 + c2)).orderBy($"Footage")
+
+//Update value in DF columns
+df.withColumn("test",
+  when(col(test).equalTo("national"),"NATIONAL")
+  .when(col(test).equalTo("nationaltest"),"NATIONALTEST")
+  .otherwise(col(test)))
+
+//join DF with different columns name
+df.join(df1.drop("col1"),df("col1")===df1("col2") && df("col3")===df1("col3"),"left").drop("col10")

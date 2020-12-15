@@ -1,0 +1,13 @@
+Join Types:
+=============
+- Shuffle Hash join
+    - Map phase read the table and shuffle the data to send it to right reduce phase.
+    - works best when the df is distributed evenly with the key which we are joining on and adequate number of keys for parallelism.
+- Broadcast Hash Join
+    - Address the problem if one DF is small enough to fit in memory.
+- Cartesian join
+    - number of rows will explode
+- Theta join
+    - Inequality join (on a.col1 < b.col1)
+- One to many join
+    - similar to cartersian

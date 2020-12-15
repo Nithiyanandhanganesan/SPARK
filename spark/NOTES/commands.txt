@@ -15,7 +15,7 @@ val firstElement = weatherRDD.first
 val firstValue = firstElement._2
 
 Spark provides complete support for Hadoop's InputFormat so anything that can be read by Hadoop can be read by Spark as well.
-The default InputFormat is TextInputFormat. TextInputFormat takes the byte offset of a line as a key and the content of a line as a value. 
+The default InputFormat is TextInputFormat. TextInputFormat takes the byte offset of a line as a key and the content of a line as a value.
 Spark uses the sc.textFile method to read using TextInputFormat. It ignores the byte offset and creates an RDD of strings.
 By default, Spark creates one partition for each InputSplit class, which roughly corresponds to one block.
 As one partition cannot contain more than one block, having fewer partitions than blocks is not allowed.
@@ -37,13 +37,13 @@ val currencyRDD = currencyFile.map( t => (t._1.toString,t._2.toString))
 LOAD DATA FROM CASSANDRA:
 -----------------------------
 
-HDFS is a good fit for streaming data access, it does not work well with random access. For example, HDFS will work well when your average file size 
+HDFS is a good fit for sequence data access, it does not work well with random access. For example, HDFS will work well when your average file size 
 is 100 MB and you want to read the whole file. If you frequently access the nth line in a file or some other part as a record, HDFS would be too slow.
 
-Relational databases have traditionally provided a solution to that, providing low latency, random access, but they do not work well with big data. 
+Relational databases have traditionally provided a solution to that, providing low latency, random access, but they do not work well with big data.
 NoSQL databases such as Cassandra fill the gap by providing relational database type access but in a distributed architecture on commodity servers.
 
-In this recipe, we will load data from Cassandra as a Spark RDD. To make that happen Datastax, the company behind Cassandra, 
+In this recipe, we will load data from Cassandra as a Spark RDD. To make that happen Datastax, the company behind Cassandra,
 has contributed spark-cassandra-connector. This connector lets you load Cassandra tables as Spark RDDs, write Spark RDDs back to Cassandra, and execute CQL queries.
 
 
@@ -67,6 +67,3 @@ Cassandra can also be accessed through Spark SQL. It has a wrapper around SQLCon
 
 scala> val cc = new org.apache.spark.sql.cassandra.CassandraSQLContext(sc)
 scala> val p = cc.sql("select * from people.person")
-
-
-

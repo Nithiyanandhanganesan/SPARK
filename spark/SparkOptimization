@@ -1,0 +1,49 @@
+Join:
+=========
+
+-> Try to do broadcase join if possible. Set kryo serialise for optmization
+
+-> If data is large and cant fit in memory, do sort merge join. In sort merge join, when we join two dataframe by default only 200 task will run irrespective
+   of source dataframe partition.
+   Increase the shuffle partition to increase the parallelism.
+   spark.conf.set("spark.sql.shuffle.partitions",5000)
+
+   -> If we are writing the data into non-partition table, then 5000 files will be created.
+   -> If we are writing the data into partition hive table, then under each partition 5000 small files will be created.
+
+   Small File Problem:
+   ---------------------
+   -> In order to control the number of small files we have to use the rand function.
+   -> Eg: Our source data size is 5 gb per partition & our hive partition is based on year then we have 365 key per year.
+
+      df.withColumn("rand",floor(rand() * x +1)).repartition(y,col("date"),col("rand"))
+       x -> 20 (totally 5 gb per partition is expectation. so 4 files per gb is ideal scenatio. so 5*4=20. totally we will can have 20 files per partition)
+            data will be distributed to 20 rand partition.
+       y -> 7300 (20*365=7300 keys will be there. even if you give 10000 only 7300 partition will have data.)
+
+   -> By this we can avoid the number of part files under each partition by increasing the parallelism.
+
+   Data Skew:
+   -------------------
+
+    -> If you are joining the large tables with small tables and join key not based on hive partition columns , then data will shuffle a lot and might
+        be skewed at one particular key. To overcome the skewness , we need to try "Salting" approach.
+
+    -> Explode the small tables to large table partition column
+        Eg: val df = spark.sql("select key,explode(array(2020-01-01,2020-02-02,2020-03-03...)) as rand_key from small_table")
+
+    -> Then join the two tables
+       val joinexpr = largeDF.col("date") === smallDF.col("rand_key") && largeDF.col("key") === smallDF.col("key")
+
+General Optimization Steps:
+==========================
+
+-> try to repartition the table based on based on key and follow through out the process to avoid shuffle
+-> set max records per files to avoid large files. spark.conf.set("spark.sql.files.maxRecordsPerFile",8513455)
+-> set shuffle service enabled, for sort merge join.
+-> Shuffle write should much not be large than input
+-> spark.executor.memoryOverhead=1024 ,
+   spark.hadoop.orc.overwrite.output.file=true,
+   spark.speculative=false,
+   spark.yan.maxAppAttempts=1,
+   spark.sql.hive.convertMetastoreOrc=false,
